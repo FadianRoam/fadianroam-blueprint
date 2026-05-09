@@ -1,0 +1,64 @@
+site_name: FadianRoam Blueprint
+site_url: https://fadianroam.yunzheng.space
+site_description: FadianRoam — An eduroam-like roaming network federation
+site_author: FadianRoam Project
+
+repo_url: https://github.com/FadianRoam/fadianroam-blueprint
+repo_name: FadianRoam/fadianroam-blueprint
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue grey
+      accent: indigo
+  font:
+    text: Roboto Mono
+    code: Roboto Mono
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+
+nav:
+  - Home: index.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Network Design: architecture/network.md
+    - Authentication Flow: architecture/auth.md
+  - Joining:
+    - Prerequisites: joining/prerequisites.md
+    - Submit Application: joining/apply.md
+    - Setup Guide: joining/setup.md
+  - Technical Reference:
+    - RADIUS Configuration: reference/radius.md
+    - VPN Configuration: reference/vpn.md
+    - BGP Integration: reference/bgp.md
+    - Federation Relay: reference/relay.md
+  - Members: members.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/FadianRoam
