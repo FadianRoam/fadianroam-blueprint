@@ -26,9 +26,9 @@ Purpose: RADIUS authentication traffic only.
 | Property | Value |
 |----------|-------|
 | Transport | WireGuard |
-| Subnet | `10.250.0.0/24` |
-| Relay IP | `10.250.0.1` |
-| Member IPs | Assigned on join (e.g., `10.250.0.10`) |
+| Subnet | `172.172.10.0/24` |
+| Relay IP | `172.172.10.1` |
+| Member IPs | Assigned on join (e.g., `172.172.10.10`) |
 | Traffic | RADIUS (UDP 1812/1813) only |
 | Required | Yes, for all members |
 
@@ -62,9 +62,9 @@ Members without BGP capabilities:
 
 | Network | Subnet | Purpose |
 |---------|--------|---------|
-| MGMT | `10.250.0.0/24` | RADIUS relay tunnels |
-| FadianNet Loopbacks | `10.251.0.0/24` | BGP router IDs / loopbacks |
-| FadianNet P2P Links | `10.252.0.0/16` | Point-to-point tunnel links |
+| MGMT | `172.172.10.0/24` | RADIUS relay tunnels |
+| FadianNet Loopbacks | `172.172.11.0/24` | BGP router IDs / loopbacks |
+| FadianNet P2P Links | `172.172.12.0/24` | Point-to-point tunnel links |
 
 !!! note "Route Separation"
     MGMT routes and FadianNet routes are kept strictly separate. The MGMT subnet is announced as a single internal route within FadianNet BGP for reachability, but no FadianNet business traffic flows over MGMT tunnels.

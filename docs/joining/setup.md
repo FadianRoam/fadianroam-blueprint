@@ -8,7 +8,7 @@ After approval, you will receive:
 
 - **Relay public key**: The Federation Relay's WireGuard public key
 - **Relay endpoint**: The Relay's public IP and port
-- **Your MGMT IP**: Your assigned IP in `10.250.0.0/24`
+- **Your MGMT IP**: Your assigned IP in `172.172.10.0/24`
 
 ### Generate Keys
 
@@ -22,14 +22,14 @@ Create `/etc/wireguard/fadianroam-mgmt.conf`:
 
 ```ini
 [Interface]
-Address = 10.250.0.XX/24          # Your assigned MGMT IP
+Address = 172.172.10.XX/24          # Your assigned MGMT IP
 PrivateKey = <your-private-key>
 ListenPort = 51820                 # Or any available port
 
 [Peer]
 PublicKey = <relay-public-key>
 Endpoint = <relay-endpoint>:51820
-AllowedIPs = 10.250.0.0/24
+AllowedIPs = 172.172.10.0/24
 PersistentKeepalive = 25
 ```
 
@@ -43,7 +43,7 @@ systemctl enable --now wg-quick@fadianroam-mgmt
 
 ```bash
 wg show fadianroam-mgmt
-ping 10.250.0.1  # Federation Relay
+ping 172.172.10.1  # Federation Relay
 ```
 
 ## Step 2: Keycloak (IDP)
@@ -171,8 +171,8 @@ realm your-realm.example.net {
 # Federation — proxy all unknown realms to the Relay
 realm DEFAULT {
     type = radius
-    authhost = 10.250.0.1:1812
-    accthost = 10.250.0.1:1813
+    authhost = 172.172.10.1:1812
+    accthost = 172.172.10.1:1813
     secret = <shared-secret-from-federation>
 }
 ```

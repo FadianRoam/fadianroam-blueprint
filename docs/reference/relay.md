@@ -40,7 +40,7 @@ The Relay does **not**:
 
 The Relay is the hub of the MGMT VPN star:
 
-- IP: `10.250.0.1`
+- IP: `172.172.10.1`
 - Listens on RADIUS ports 1812/1813 within the MGMT subnet
 - Each member has a WireGuard peer entry on the Relay
 
@@ -56,8 +56,8 @@ The Relay maintains a realm entry for each member, generated from the federation
 # Member A
 realm roam.member-a.net {
     type = radius
-    authhost = 10.250.0.10:1812
-    accthost = 10.250.0.10:1813
+    authhost = 172.172.10.10:1812
+    accthost = 172.172.10.10:1813
     secret = <member-a-shared-secret>
     nostrip
 }
@@ -65,8 +65,8 @@ realm roam.member-a.net {
 # Member B
 realm roam.member-b.org {
     type = radius
-    authhost = 10.250.0.11:1812
-    accthost = 10.250.0.11:1813
+    authhost = 172.172.10.11:1812
+    accthost = 172.172.10.11:1813
     secret = <member-b-shared-secret>
     nostrip
 }
@@ -91,13 +91,13 @@ Each member is defined as a RADIUS client:
 # clients.conf on Federation Relay
 
 client member-a {
-    ipaddr = 10.250.0.10
+    ipaddr = 172.172.10.10
     secret = <member-a-shared-secret>
     shortname = member-a
 }
 
 client member-b {
-    ipaddr = 10.250.0.11
+    ipaddr = 172.172.10.11
     secret = <member-b-shared-secret>
     shortname = member-b
 }
@@ -127,19 +127,19 @@ authenticate {
 # /etc/wireguard/fadianroam-mgmt.conf on Relay
 
 [Interface]
-Address = 10.250.0.1/24
+Address = 172.172.10.1/24
 PrivateKey = <relay-private-key>
 ListenPort = 51820
 
 [Peer]
 # Member A
 PublicKey = <member-a-pubkey>
-AllowedIPs = 10.250.0.10/32
+AllowedIPs = 172.172.10.10/32
 
 [Peer]
 # Member B
 PublicKey = <member-b-pubkey>
-AllowedIPs = 10.250.0.11/32
+AllowedIPs = 172.172.10.11/32
 
 # ... one [Peer] per member
 ```

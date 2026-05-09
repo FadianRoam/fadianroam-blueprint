@@ -173,8 +173,8 @@ realm your-realm.example.net {
 ```
 realm DEFAULT {
     type = radius
-    authhost = 10.250.0.1:1812
-    accthost = 10.250.0.1:1813
+    authhost = 172.172.10.1:1812
+    accthost = 172.172.10.1:1813
     secret = <federation-shared-secret>
     nostrip
 }
@@ -200,7 +200,7 @@ client wifi-ap {
 
 ```
 client federation-relay {
-    ipaddr = 10.250.0.1
+    ipaddr = 172.172.10.1
     secret = <federation-shared-secret>
     shortname = fadianroam-relay
 }

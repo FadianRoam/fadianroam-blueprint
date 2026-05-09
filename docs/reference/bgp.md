@@ -37,7 +37,7 @@ Recommended BGP daemon for FadianRoam members.
 #### Router ID and Loopback
 
 ```
-router id 10.251.0.X;  # Your assigned loopback from 10.251.0.0/24
+router id 172.172.11.X;  # Your assigned loopback from 172.172.11.0/24
 ```
 
 #### FadianNet BGP Template
@@ -62,7 +62,7 @@ template bgp fadiannet {
 ```
 filter fadiannet_import {
     # Accept FadianNet internal routes
-    if net ~ [10.250.0.0/24, 10.251.0.0/24, 10.252.0.0/16] then accept;
+    if net ~ [172.172.10.0/24, 172.172.11.0/24, 172.172.12.0/16] then accept;
     
     # Accept member-announced prefixes (validated by federation registry)
     if (65000, 0) ~ bgp_community then accept;
@@ -82,7 +82,7 @@ filter fadiannet_export {
     }
     
     # Announce MGMT route for reachability
-    if net = 10.250.0.0/24 then accept;
+    if net = 172.172.10.0/24 then accept;
     
     reject;
 }
@@ -92,7 +92,7 @@ filter fadiannet_export {
 
 ```
 protocol bgp fadiannet_peer_b from fadiannet {
-    neighbor 10.252.0.2 as YYYYY;  # Peer's ASN
+    neighbor 172.172.12.2 as YYYYY;  # Peer's ASN
     description "FadianNet - Member B";
     
     interface "fadiannet-peer-b";
@@ -105,13 +105,13 @@ Alternative BGP daemon configuration:
 
 ```
 router bgp XXXXX
- bgp router-id 10.251.0.X
+ bgp router-id 172.172.11.X
  no bgp default ipv4-unicast
  
  neighbor fadiannet peer-group
  neighbor fadiannet remote-as external
  
- neighbor 10.252.0.2 peer-group fadiannet
+ neighbor 172.172.12.2 peer-group fadiannet
  
  address-family ipv4 unicast
   neighbor fadiannet activate
@@ -128,9 +128,9 @@ Automatically exchanged between all BGP members:
 
 | Prefix | Purpose |
 |--------|---------|
-| `10.250.0.0/24` | MGMT network reachability |
-| `10.251.0.0/24` | Loopback reachability |
-| `10.252.0.0/16` | P2P link reachability |
+| `172.172.10.0/24` | MGMT network reachability |
+| `172.172.11.0/24` | Loopback reachability |
+| `172.172.12.0/16` | P2P link reachability |
 
 ### Member Prefixes
 
@@ -164,7 +164,7 @@ Members with upstream connectivity can optionally provide transit:
 ```bash
 birdc show protocols all fadiannet_*
 birdc show route protocol fadiannet_peer_b
-birdc show route where net = 10.251.0.0/24
+birdc show route where net = 172.172.11.0/24
 ```
 
 ### FRRouting
@@ -172,7 +172,7 @@ birdc show route where net = 10.251.0.0/24
 ```bash
 vtysh -c "show bgp summary"
 vtysh -c "show bgp ipv4 unicast"
-vtysh -c "show bgp neighbors 10.252.0.2"
+vtysh -c "show bgp neighbors 172.172.12.2"
 ```
 
 ## Requirements

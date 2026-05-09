@@ -45,7 +45,7 @@ When a user from Site B connects at Site A:
 Every member's RADIUS server connects to the Federation Relay via a **dedicated MGMT VPN tunnel**. This tunnel carries only RADIUS traffic (UDP 1812/1813) and is used exclusively for authentication proxy.
 
 - Transport: WireGuard
-- Addressing: Dedicated internal IP range (e.g., `10.250.0.0/24`)
+- Addressing: Dedicated internal IP range (e.g., `172.172.10.0/24`)
 - Required for all members
 
 ### 3. Data Network (FadianNet)
