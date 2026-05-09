@@ -1,2 +1,19 @@
 # fadianroam-blueprint
 fadianroam-blueprint
+
+
+federation manager我试着vibe出来一个吧，然后这个radius relay共同维护的成员列表我先放到github里，做好了我发出来；既然各位还没updates，我就先放到自己域名里了
+
+
+@uetcis
+
+
+目前federation relay（radius proxy）我单独开一台vps放吧，比较小规格的，当然如果有人愿意sponsor那是极好的 好吧我来当这个sponsor🧵
+
+
+因为fadianroam的蓝图里，互联网部分是有我们BGP的需求的（非成员强制，只是谁如果可以加入BGP，就相当于为FadianRoam上网骨干进行架构）
+
+
+目前还没有想好fedaration relay和各位的radius之间如何互联，如果有BGP接入的情况下，那就是BGP Over VPN，然后通过公网地址互联，然后如果没有BGP接入，那么就是 VPN Only，当然介于Peering路由不会互相传播，如果强制与Federation进行互联，那有点过于中心化了，所以我的想法是同时传递一条单独的内网路由单独在我们的BGP中使用 然后为Fedaration Relay设置对应的专用内部IP？
+
+或者分为完全的两个网，一个是MGMT，每一个radius都需要跟relay建立MGMT VPN作为验证的传输，另一个是业务vlan，要求所有人都加入，然后fadianroam依靠这里的BGP上网使用，每一个参与者都需要讲实际上网的链路link到fadianet里，然后进行BGP接入（可以提供Transit或者作为DOwnstream），没有BGP的成员可以接入Fadiannet VPN Only
