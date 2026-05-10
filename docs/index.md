@@ -6,10 +6,10 @@ FadianRoam enables participants to deploy local wireless access points that auth
 
 ## How It Works
 
-1. Each member runs their own **Identity Provider** (IDP) and **RADIUS server** with a unique realm (e.g., `@roam.example.net`)
-2. A central **Federation Relay** routes RADIUS authentication requests between members
-3. Members interconnect via **FadianNet VPN**, which carries both management traffic and user data
-4. Optional **BGP integration** allows members to contribute transit and build a shared internet backbone
+1. **Layer 1 — MGMT VPN**: Each member's RADIUS server connects to the Federation Relay for roaming authentication
+2. **Layer 2 — FadianNet**: BGP Sites (with own ASN) form a data backbone, announcing a shared /24 prefix with RPKI
+3. **Layer 3 — Access**: Sites dial PPPoE over VPN to get a /32 IP, NAT AP users behind it
+4. **FadianLink**: BGP Sites extend connectivity to Access Members without ASN — no BGP knowledge needed to join
 
 ## Quick Links
 
