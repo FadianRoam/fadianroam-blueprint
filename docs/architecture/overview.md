@@ -94,6 +94,6 @@ See [Network Design](network.md) for details.
 - **Decentralized identity**: Each member controls their own users. No central user database.
 - **Centralized authentication routing**: The Federation Relay is the only shared RADIUS infrastructure.
 - **Decentralized data plane**: PPPoE servers and Route Reflectors are distributed regionally.
-- **Own ASN participation**: Each BGP member uses their own ASN, not a shared one.
+- **Two member tiers**: BGP members (own ASN, contribute routing) and Access members (no ASN, receive default route).
 - **Open membership**: Join by submitting a PR to the federation repo.
 - **Transparent governance**: All configuration is public on GitHub.

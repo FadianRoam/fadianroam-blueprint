@@ -145,14 +145,24 @@ End-to-end flow for a roaming user:
 4. User traffic → AP → NAT (X.X.X.N) → FadianNet → Internet
 ```
 
+## Member Types
+
+### BGP Member
+
+Operates their own ASN and participates in FadianNet eBGP routing. Contributes to the backbone by announcing /32 routes and optionally providing transit.
+
+### Access Member
+
+Does not have an ASN. Connects to MGMT VPN + FadianNet backbone, receives a /32 via PPPoE, and gets a default route from the nearest BGP member or regional RR. Traffic is tunneled through the backbone without the member participating in BGP.
+
 ## Member Connectivity Requirements
 
-| Requirement | All Members |
-|-------------|-------------|
-| MGMT VPN to Relay | Required |
-| FadianNet VPN | Required |
-| PPPoE dial-up | Required |
-| Own ASN | Required |
-| eBGP session | Required |
-| Wi-Fi AP with 802.1X | Required |
-| Public IP | Recommended |
+| Requirement | BGP Member | Access Member |
+|-------------|------------|---------------|
+| MGMT VPN to Relay | Required | Required |
+| FadianNet VPN | Required | Required |
+| PPPoE dial-up | Required | Required |
+| Own ASN | Required | Not required |
+| eBGP session | Required | Not required |
+| Wi-Fi AP with 802.1X | Required | Required |
+| Public IP | Recommended | Not required |
