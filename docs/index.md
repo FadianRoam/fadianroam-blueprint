@@ -11,6 +11,12 @@ FadianRoam enables participants to deploy local wireless access points that auth
 3. **Layer 3 — Access**: Sites dial PPPoE over VPN to get a /32 IP, NAT AP users behind it
 4. **FadianLink**: BGP Sites extend connectivity to Access Members without ASN — no BGP knowledge needed to join
 
+## Join the Project
+
+FadianRoam is a non-profit, community-driven project. Whether you're a BGP operator or just want to deploy an AP, you're welcome to join.
+
+[Join via Telegram :fontawesome-brands-telegram:](https://t.me/+WLLU-KOXcQFiMTg1){ .md-button .md-button--primary }
+
 ## Quick Links
 
 - [Architecture Overview](architecture/overview.md) — Understand the system design
@@ -27,5 +33,6 @@ FadianRoam is an open, non-profit federation. All configuration and membership i
 | **GitHub** | [github.com/FadianRoam](https://github.com/FadianRoam) |
 | **Federation Repo** | [FadianRoam/fadianroam-blueprint](https://github.com/FadianRoam/fadianroam-blueprint) |
 | **Contact** | [edward.sun@as204921.net](mailto:edward.sun@as204921.net) |
+| **Telegram** | [Join Group](https://t.me/+WLLU-KOXcQFiMTg1) |
 | **Status** | Early Development |
 | **Docs** | [fadianroam.yunzheng.space](https://fadianroam.yunzheng.space) |
