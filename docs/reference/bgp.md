@@ -30,95 +30,39 @@ graph LR
 
 ## BGP Configuration
 
-### BIRD 2.x
+Each BGP Site must configure eBGP peering with the assigned regional Route Reflector using their own ASN. The specific BGP daemon and configuration syntax is up to each member.
 
-Recommended BGP daemon for FadianRoam members.
+### Required Parameters
 
-#### Router ID and Loopback
+| Parameter | Value |
+|-----------|-------|
+| Router ID | Your assigned IP from `172.172.11.0/24` |
+| Local AS | Your own ASN |
+| Neighbor | Regional RR IP (assigned on join) |
+| Hold time | 90s recommended |
+| Keepalive | 30s recommended |
 
-```
-router id 172.172.11.X;  # Your assigned loopback from 172.172.11.0/24
-```
+### Import Policy
 
-#### FadianNet BGP Template
+Accept the following routes from FadianNet peers:
 
-```
-template bgp fadiannet {
-    local as XXXXX;           # Your ASN
-    hold time 90;
-    keepalive time 30;
-    graceful restart on;
+- `172.172.10.0/24` — MGMT network
+- `172.172.11.0/24` — Loopback network
+- `172.172.12.0/16` — P2P links
+- Routes tagged with FadianNet community `(65000, 0)`
 
-    ipv4 {
-        import filter fadiannet_import;
-        export filter fadiannet_export;
-        next hop self;
-    };
-}
-```
+Reject everything else.
 
-#### Import Filter
+### Export Policy
 
-```
-filter fadiannet_import {
-    # Accept FadianNet internal routes
-    if net ~ [172.172.10.0/24, 172.172.11.0/24, 172.172.12.0/16] then accept;
-    
-    # Accept member-announced prefixes (validated by federation registry)
-    if (65000, 0) ~ bgp_community then accept;
-    
-    reject;
-}
-```
+Announce the following to FadianNet peers:
 
-#### Export Filter
+- Your own prefixes, tagged with community `(65000, 0)`
+- MGMT route `172.172.10.0/24` for reachability
 
-```
-filter fadiannet_export {
-    # Announce your own prefixes
-    if source = RTS_STATIC then {
-        bgp_community.add((65000, 0));  # FadianNet origin community
-        accept;
-    }
-    
-    # Announce MGMT route for reachability
-    if net = 172.172.10.0/24 then accept;
-    
-    reject;
-}
-```
+### Peer Configuration
 
-#### Peer Configuration
-
-```
-protocol bgp fadiannet_peer_b from fadiannet {
-    neighbor 172.172.12.2 as YYYYY;  # Peer's ASN
-    description "FadianNet - Member B";
-    
-    interface "fadiannet-peer-b";
-}
-```
-
-### FRRouting
-
-Alternative BGP daemon configuration:
-
-```
-router bgp XXXXX
- bgp router-id 172.172.11.X
- no bgp default ipv4-unicast
- 
- neighbor fadiannet peer-group
- neighbor fadiannet remote-as external
- 
- neighbor 172.172.12.2 peer-group fadiannet
- 
- address-family ipv4 unicast
-  neighbor fadiannet activate
-  neighbor fadiannet soft-reconfiguration inbound
-  network 203.0.113.0/24
- exit-address-family
-```
+Configure one eBGP session per FadianNet peer, using the P2P link addresses from `172.172.12.0/24`.
 
 ## Route Types
 
@@ -159,28 +103,18 @@ Members with upstream connectivity can optionally provide transit:
 
 ## Monitoring
 
-### BIRD
+Verify the following in your BGP daemon:
 
-```bash
-birdc show protocols all fadiannet_*
-birdc show route protocol fadiannet_peer_b
-birdc show route where net = 172.172.11.0/24
-```
-
-### FRRouting
-
-```bash
-vtysh -c "show bgp summary"
-vtysh -c "show bgp ipv4 unicast"
-vtysh -c "show bgp neighbors 172.172.12.2"
-```
+- eBGP session with regional RR is established
+- FadianNet internal routes are received
+- Your own prefixes are being announced with the correct community
 
 ## Requirements
 
 | Requirement | Details |
 |-------------|---------|
 | ASN | Public or private (64512–65534 for private) |
-| BGP daemon | BIRD 2.x or FRRouting |
+| BGP daemon | Any daemon capable of eBGP |
 | IP prefix | At least one routable prefix |
 | WireGuard tunnels | One per BGP peer |
 | Public IP | Required for endpoint reachability |

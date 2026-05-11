@@ -8,7 +8,7 @@ The Relay acts as a central RADIUS proxy:
 
 ```mermaid
 graph LR
-    RA[Member A<br/>RADIUS] -->|user@realm.b| RELAY[Federation Relay<br/>FreeRADIUS Proxy]
+    RA[Member A<br/>RADIUS] -->|user@realm.b| RELAY[Federation Relay<br/>RADIUS Proxy]
     RELAY -->|forward| RB[Member B<br/>RADIUS]
     RB -->|Access-Accept| RELAY
     RELAY -->|Access-Accept| RA
@@ -24,7 +24,7 @@ The Relay does **not**:
 - Store any user credentials
 - Inspect inner EAP payloads (encrypted in TLS tunnel)
 - Participate in user data traffic
-- Run an IDP or Keycloak instance
+- Run an IDP
 
 ## Architecture
 
@@ -32,7 +32,7 @@ The Relay does **not**:
 
 | Component | Purpose |
 |-----------|---------|
-| FreeRADIUS | RADIUS proxy engine |
+| RADIUS proxy | RADIUS proxy engine |
 | WireGuard | MGMT VPN hub (star topology) |
 | Federation config | Realm → member IP mapping |
 
@@ -44,7 +44,7 @@ The Relay is the hub of the MGMT VPN star:
 - Listens on RADIUS ports 1812/1813 within the MGMT subnet
 - Each member has a WireGuard peer entry on the Relay
 
-## FreeRADIUS Proxy Configuration
+## RADIUS Proxy Configuration
 
 ### Realm Definitions
 
@@ -161,7 +161,7 @@ This can be automated with CI/CD:
 ```bash
 # Example: regenerate and reload
 ./scripts/generate-relay-config.sh
-systemctl reload freeradius
+# reload RADIUS proxy service
 wg syncconf fadianroam-mgmt <(wg-quick strip fadianroam-mgmt)
 ```
 
@@ -172,7 +172,7 @@ wg syncconf fadianroam-mgmt <(wg-quick strip fadianroam-mgmt)
 | Server | Dedicated VPS (separate from any member's infrastructure) |
 | Location | Low-latency region for majority of members |
 | Specs | 1 vCPU, 1 GB RAM (lightweight proxy workload) |
-| OS | Debian 12+ |
+| OS | Linux |
 | Redundancy | Future: multiple relays with shared realm config |
 
 ## Monitoring
@@ -180,15 +180,11 @@ wg syncconf fadianroam-mgmt <(wg-quick strip fadianroam-mgmt)
 ### RADIUS
 
 ```bash
-# Check FreeRADIUS is running
-systemctl status freeradius
-
-# Debug mode (stop service first)
-freeradius -X
-
-# Watch proxy decisions in debug output:
-# - "Found realm: roam.member-b.org"
-# - "Proxying to realm roam.member-b.org"
+# Check RADIUS proxy is running
+# Verify proxy decisions in logs:
+# - Realm lookup successful
+# - Request proxied to correct member
+# - Response forwarded back
 ```
 
 ### WireGuard

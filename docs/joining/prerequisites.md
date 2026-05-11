@@ -1,60 +1,51 @@
 # Prerequisites
 
-Before joining FadianRoam, ensure you meet the following requirements.
+Before joining FadianRoam, ensure you meet the following requirements. FadianRoam does not prescribe specific brands, software, or deployment methods — members are free to choose their own solutions as long as they meet the functional requirements below.
 
 ## Required Infrastructure
 
 ### 1. Wi-Fi Access Point with 802.1X
 
-You need at least one Wi-Fi access point that supports **WPA2/WPA3-Enterprise** (802.1X):
+At least one Wi-Fi access point that supports **WPA2/WPA3-Enterprise** (802.1X):
 
 - Must support RADIUS authentication
-- Must be configurable to point to your local RADIUS server
-- Consumer-grade routers generally do **not** support this
-- Recommended: Ubiquiti UniFi, Mikrotik, OpenWrt-based APs
+- Must be configurable to point to your RADIUS server
 
 ### 2. RADIUS Server
 
-A FreeRADIUS server (or compatible) configured for:
+A RADIUS server capable of:
 
 - EAP-TTLS/PAP authentication
 - Realm-based proxying (forward non-local realms to Federation Relay)
-- REST module for Keycloak ROPC integration
-
-Recommended: **FreeRADIUS 3.x** on Debian/Ubuntu.
+- Integrating with your Identity Provider for credential verification
 
 ### 3. Identity Provider (IDP)
 
-An OpenID Connect-capable IDP that supports the **ROPC grant**:
+An identity provider that your RADIUS server can authenticate against:
 
-- Recommended: **Keycloak** (open-source, self-hosted)
-- Must support Resource Owner Password Credentials grant type
-- A dedicated realm for roaming users is recommended
+- Must be able to verify user credentials on behalf of RADIUS
+- How you implement this (ROPC, LDAP, local database, etc.) is up to you
 
-### 4. Server / VPS
+### 4. Server
 
-A server to run RADIUS and Keycloak:
+A server to host your RADIUS and IDP infrastructure:
 
-- Linux server (Debian 12+ recommended)
-- Public IP address (recommended for BGP members, optional for VPN-only)
-- Minimum: 2 vCPU, 2 GB RAM, 20 GB disk
-- Ports: WireGuard (UDP, configurable), RADIUS (UDP 1812/1813)
+- Must be able to establish a WireGuard tunnel to the Federation Relay
+- Must be reachable for RADIUS traffic over the MGMT VPN
 
 ### 5. TLS Certificate
 
 A valid TLS certificate for your RADIUS server's EAP tunnel:
 
-- From a publicly trusted CA (Let's Encrypt, ZeroSSL)
-- Auto-renewal configured
-- Self-signed certificates will cause client connection failures
+- Must be from a publicly trusted CA (self-signed certificates will cause client connection failures)
+- Auto-renewal is strongly recommended
 
 ### 6. Domain Name
 
 A domain or subdomain for your realm identifier:
 
-- Example: `roam.example.net`
 - Used as the RADIUS realm suffix (e.g., `user@roam.example.net`)
-- DNS A record pointing to your server (for federation coordination)
+- DNS A record pointing to your server
 
 ## Optional (BGP Members)
 
@@ -63,7 +54,7 @@ If you want to participate in FadianNet BGP:
 | Requirement | Details |
 |-------------|---------|
 | Own ASN | Public or private ASN |
-| BGP daemon | BIRD, FRRouting, or similar |
+| BGP daemon | Capable of eBGP peering with regional Route Reflectors |
 | IP prefix | At least one routable prefix to announce |
 | Public IP | Required for BGP peering |
 
@@ -80,11 +71,9 @@ If you want to participate in FadianNet BGP:
 
 ## Skill Requirements
 
-You should be comfortable with:
+Members are expected to independently deploy and maintain their own infrastructure. You should be comfortable with:
 
 - Linux server administration
-- Basic networking concepts (IP addressing, routing, firewalls)
-- WireGuard VPN setup
+- Basic networking (IP addressing, routing, firewalls)
+- WireGuard VPN
 - RADIUS concepts (realms, proxying, EAP)
-
-FadianRoam provides setup guides, but members are expected to maintain their own infrastructure.

@@ -39,7 +39,7 @@ Star-topology WireGuard VPN carrying **RADIUS proxy traffic only**. Each Site's 
 1. User connects to AP at Site A as `user@realm.b`
 2. Site A RADIUS proxies via MGMT VPN → Federation Relay
 3. Relay forwards via MGMT VPN → Site B RADIUS
-4. Site B validates against local Keycloak IDP
+4. Site B validates against local IDP
 5. Access-Accept flows back through the chain
 
 ## Layer 2: FadianNet (BGP Backbone)

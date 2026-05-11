@@ -190,7 +190,7 @@ End-to-end flow for a roaming user at an Access Member site:
 
 ```
 1. User connects to AP → 802.1X authentication
-2. AP → Site RADIUS → MGMT VPN → Federation Relay → Home RADIUS → Keycloak
+2. AP → Site RADIUS → MGMT VPN → Federation Relay → Home RADIUS → IDP
 3. Access-Accept → User gets Wi-Fi
 4. User traffic → AP → NAT (X.X.X.N) → FadianLink VPN → BGP Site → FadianNet → Internet
 ```

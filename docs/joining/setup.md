@@ -46,158 +46,37 @@ wg show fadianroam-mgmt
 ping 172.172.10.1  # Federation Relay
 ```
 
-## Step 2: Keycloak (IDP)
+## Step 2: Identity Provider
 
-### Install Keycloak
+Deploy an Identity Provider that your RADIUS server can authenticate against. Your IDP must be able to verify user credentials on behalf of the RADIUS server (e.g., via ROPC, LDAP, REST API, or any method your RADIUS implementation supports).
 
-Follow the [official Keycloak guide](https://www.keycloak.org/guides) for your platform. Recommended: Keycloak 24+ with PostgreSQL.
+Create a set of test users for federation verification.
 
-### Create Roaming Realm
+## Step 3: RADIUS Server
 
-Create a dedicated realm for roaming users (e.g., `roam`):
+Deploy a RADIUS server capable of:
 
-1. Log in to Keycloak Admin Console
-2. Create new realm named `roam`
-3. Disable user self-registration (members manage their own users)
+1. **EAP-TTLS/PAP** — accepting 802.1X authentication from APs
+2. **IDP integration** — validating local user credentials against your IDP
+3. **Realm-based proxying** — forwarding non-local realm requests to the Federation Relay
 
-### Create FreeRADIUS Client
+### Key Configuration Points
 
-In the `roam` realm:
+**EAP**: Configure EAP-TTLS as the default method. Use a valid TLS certificate from a publicly trusted CA.
 
-1. Go to **Clients** → **Create client**
-2. Client ID: `freeradius`
-3. Client authentication: **On**
-4. Authentication flow: Enable **Direct access grants** (ROPC) and **Service accounts roles**
-5. Save and copy the **Client secret**
+**IDP integration**: Configure your RADIUS server to validate credentials against your IDP. The `Stripped-User-Name` (after realm stripping) should be used as the username.
 
-### Create Test User
+**Realm proxying**: Configure your RADIUS to:
 
-1. Go to **Users** → **Add user**
-2. Set username, email
-3. Go to **Credentials** → Set password (temporary: off)
+- Handle your own realm locally
+- Proxy all unknown realms (`DEFAULT`) to the Federation Relay at `172.172.10.1:1812` using the shared secret provided on approval
 
-## Step 3: FreeRADIUS
+**Federation Relay client**: Allow the Federation Relay (`172.172.10.1`) as a RADIUS client so it can forward roaming requests to you.
 
-### Install
+### Verify
 
 ```bash
-apt update && apt install -y freeradius freeradius-rest
-```
-
-### TLS Certificate
-
-Obtain a certificate for your RADIUS domain:
-
-```bash
-# Using acme.sh with DNS-01 (example with Cloudflare)
-acme.sh --issue --dns dns_cf -d radius.example.net \
-  --keylength ec-256 \
-  --install-cert \
-  -d radius.example.net \
-  --key-file /etc/freeradius/3.0/certs/radius.key \
-  --fullchain-file /etc/freeradius/3.0/certs/radius.cer \
-  --ca-file /etc/freeradius/3.0/certs/ca.cer \
-  --reloadcmd "systemctl restart freeradius"
-```
-
-Set permissions:
-
-```bash
-chown freerad:freerad /etc/freeradius/3.0/certs/radius.*
-chmod 640 /etc/freeradius/3.0/certs/radius.*
-```
-
-### Configure EAP
-
-Edit `/etc/freeradius/3.0/mods-enabled/eap`:
-
-```
-eap {
-    default_eap_type = ttls
-
-    tls-config tls-common {
-        private_key_file = /etc/freeradius/3.0/certs/radius.key
-        certificate_file = /etc/freeradius/3.0/certs/radius.cer
-        ca_file = /etc/freeradius/3.0/certs/ca.cer
-        tls_min_version = "1.2"
-        tls_max_version = "1.3"
-    }
-
-    ttls {
-        tls = tls-common
-        default_eap_type = md5
-        copy_request_to_tunnel = yes
-        use_tunneled_reply = yes
-        virtual_server = "inner-tunnel"
-    }
-}
-```
-
-### Configure REST Module
-
-Edit `/etc/freeradius/3.0/mods-enabled/rest`:
-
-```
-rest {
-    connect_uri = "http://127.0.0.1:8080"
-
-    authorize {
-        uri = "${..connect_uri}/realms/roam/protocol/openid-connect/token"
-        method = 'post'
-        body = 'post'
-        data = "client_id=freeradius&client_secret=<YOUR_SECRET>&grant_type=password&username=%{%{Stripped-User-Name}:-%{User-Name}}&password=%{User-Password}&scope=openid"
-        force_to = 'plain'
-    }
-
-    authenticate {
-        uri = "${..connect_uri}/realms/roam/protocol/openid-connect/token"
-        method = 'post'
-        body = 'post'
-        data = "client_id=freeradius&client_secret=<YOUR_SECRET>&grant_type=password&username=%{%{Stripped-User-Name}:-%{User-Name}}&password=%{User-Password}&scope=openid"
-        force_to = 'plain'
-    }
-}
-```
-
-### Configure Realm Proxying
-
-Edit `/etc/freeradius/3.0/proxy.conf`:
-
-```
-# Your local realm — handle locally
-realm your-realm.example.net {
-}
-
-# Federation — proxy all unknown realms to the Relay
-realm DEFAULT {
-    type = radius
-    authhost = 172.172.10.1:1812
-    accthost = 172.172.10.1:1813
-    secret = <shared-secret-from-federation>
-}
-```
-
-### Configure Default Site
-
-In `/etc/freeradius/3.0/sites-enabled/default`, ensure:
-
-- **authorize** section: `suffix` module is enabled (for realm stripping)
-- **authorize** section: Set `Auth-Type := PAP` when `User-Password` is present
-- **authenticate** section: `Auth-Type PAP { rest }`
-
-### Configure Inner Tunnel
-
-In `/etc/freeradius/3.0/sites-enabled/inner-tunnel`:
-
-- **authenticate** section: `Auth-Type PAP { rest }`
-
-### Test
-
-```bash
-# Debug mode
-freeradius -X
-
-# In another terminal
+# Test local authentication
 radtest user@your-realm.example.net PASSWORD localhost 0 testing123
 ```
 
