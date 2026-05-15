@@ -300,9 +300,10 @@ User traffic flow:
 
     讨论仍在进行中——欢迎加入 [Telegram 群组](https://t.me/+WLLU-KOXcQFiMTg1)参与讨论。
 
-<img src="https://img.yunzheng.space/2026/05/tpttw1r0.png" width="500">
+!!! quote "社区讨论"
+    **Jack（AS153376）** 提出了一个问题：如果一个 ORG 的用户特别多，在各地都有大量用户连接到 FadianRoam 节点（例如 JianyuelabLTD），那这个站点是否应该被视为商业使用？
 
-<img src="https://img.yunzheng.space/2026/05/4vz3k2n2.png" width="500">
+    **回复**：如果是商业情境，委员会应该设立一个在 FadianRoam 上的使用标准，以「配额」为单位。超出爱好配额的部分，对应的网络成本由所有 BGP Sites 均摊（固定配额价值）。每个 ORG 产生的爱好配额以外的部分，由该 ORG 承担对应的 BGP Sites 付出的额外平摊成本。
 
 ## 内部寻址
 
