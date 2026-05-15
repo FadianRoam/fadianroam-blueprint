@@ -41,6 +41,37 @@ nav:
   - Members: members.md
   - Roadmap: roadmap.md
 
+plugins:
+  - search
+  - i18n:
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: zh
+          name: 中文
+          build: true
+          nav_translations:
+            Home: 首页
+            Architecture: 架构
+            Overview: 概览
+            Network Design: 网络设计
+            Authentication Flow: 认证流程
+            Governance: 治理
+            Federation Model: 联盟模型
+            Joining: 加入
+            Prerequisites: 前置条件
+            Submit Application: 提交申请
+            Setup Guide: 部署指南
+            Technical Reference: 技术参考
+            RADIUS Configuration: RADIUS 配置
+            VPN Configuration: VPN 配置
+            BGP Integration: BGP 集成
+            Federation Relay: 联盟中继
+            Members: 成员
+            Roadmap: 路线图
+
 markdown_extensions:
   - admonition
   - pymdownx.details
