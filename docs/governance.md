@@ -70,42 +70,47 @@ FadianRoam runs **on top of** FadianNet — the SSID, authentication, and projec
 
 ## Usage Policy & Fair Use
 
-FadianRoam Sites operate under a **fair-use model** by default:
+The spirit of FadianRoam is **Fadian (发电)** — powering your own use and sharing with each other. The federation billing system is **not about real charges** — it defines a reasonable hobby-use baseline and ensures the sustainability of shared infrastructure.
 
-### Default Tier (Free)
+### Billing System
 
-- Standard bandwidth allocation per Site
-- Reasonable user count and traffic volume
-- Non-commercial use
-- No additional cost — covered by the collective FadianNet backbone
+Once the Governance Council is established, a federation billing system will be introduced:
 
-### Elevated Use
+- The billing system **tracks usage**, it does not directly charge fees
+- The federation defines a **reasonable hobby-use baseline** for each Site (bandwidth, user count, traffic, etc.)
+- Usage within the baseline is completely free, covered by the collective FadianNet backbone
+- Billing data is used for fair-use monitoring and federation transparency
 
-If a FadianRoam Site requires resources beyond the default tier — due to high user count, heavy traffic, or commercial operations — the following process applies:
+### Exceeding the Baseline
+
+If a Site's usage exceeds the hobby-use baseline, the following process applies:
 
 | Step | Action |
 |------|--------|
-| 1 | Site submits a request ticket to [YunZheng HelpCentre](https://helpdesk.yunzheng.space) |
-| 2 | Request is reviewed by the Governance Council (or maintainers in early stage) |
-| 3 | Council assesses impact on FadianNet infrastructure |
-| 4 | If approved, a commercial plan or cost-sharing arrangement is agreed |
-| 5 | Site operates under the approved terms |
+| 1 | The Site receives an over-baseline notification |
+| 2 | Site submits an explanation ticket to [YunZheng HelpCentre](https://helpdesk.yunzheng.space) |
+| 3 | **Explain the reason**: temporary spike or sustained need |
+| 4 | Governance Council (or maintainers in early stage) reviews |
+| 5 | Approved or adjustment requested based on the situation |
 
-Examples of elevated use:
+### Special Scenario Approval
 
-- Large number of registered users (e.g., >100 active users)
-- Sustained high bandwidth consumption
-- Commercial Wi-Fi service built on FadianRoam
-- Reselling or sublicensing access
+The following scenarios can be approved for temporary over-baseline usage at no additional cost:
+
+- **FadianRoam's own offline meetups** (member meetups, technical exchange events, etc.)
+- **Offline events in collaboration with FadianRoam** (exhibitions, demos, community events, etc.)
+- **Temporary testing and debugging** (new Site onboarding, stress testing, etc.)
+
+To apply: submit a ticket to [YunZheng HelpCentre](https://helpdesk.yunzheng.space) in advance with event details and estimated usage.
 
 ### Commercial Use
 
-Sites operating FadianRoam for commercial purposes must:
+If a Site needs to use FadianRoam for commercial purposes (sustained high usage, paid services, etc.):
 
-1. Disclose commercial intent in their membership application
+1. Disclose commercial intent in the membership application
 2. Obtain Governance Council approval
-3. Agree to a cost-sharing or licensing arrangement
-4. Comply with any branding and service-level requirements
+3. Bear the corresponding network costs
+4. Comply with branding and service-level requirements
 
 ## Support & Tickets
 
