@@ -127,6 +127,33 @@ Each member operates an independent identity system for their roaming users:
 - No user synchronization between members
 - Each member controls their own user lifecycle (registration, suspension, deletion)
 
+## User Registration
+
+Each FadianRoam Site (branch) independently manages user registration for its realm.
+
+### Registration Policy
+
+Each Site decides its own registration policy:
+
+| Policy | Description |
+|--------|-------------|
+| **Open** | Anyone can register an account at the Site |
+| **Invite-only** | Registration requires an invitation from the Site operator |
+| **Closed** | No public registration; accounts created by administrator only |
+
+The federation does not enforce a uniform policy — Sites are free to choose what fits their use case.
+
+### User Identity
+
+- Users register at a specific Site and receive credentials under that Site's realm
+- Identity format: `username@site-realm` (e.g., `edward.sun@roam.yunzheng.space`)
+- A user's credentials work at **any** FadianRoam AP worldwide via roaming
+- The home Site is responsible for authenticating its own users, regardless of where they connect
+
+### Roaming Rights
+
+A user registered at any FadianRoam Site can connect at any other Site's AP. The home Site bears responsibility for its users' behavior and traffic.
+
 ## Realm Naming
 
 Each member registers a unique realm identifier with the federation:

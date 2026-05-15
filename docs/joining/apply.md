@@ -48,14 +48,20 @@ Create a PR with:
 - **Title**: `[Join] roam.example.net`
 - **Description**: Brief introduction of your organization and intended use
 
-### 4. Review
+### 4. Federation Vote
 
-Existing members and maintainers will review your application:
+All existing FadianRoam Site representatives vote on your application via GitHub PR review:
 
-- Verify your infrastructure meets [prerequisites](prerequisites.md)
-- Check realm name uniqueness
-- Assign MGMT VPN IP and RADIUS shared secret
-- Test connectivity after VPN setup
+- Each member casts **Approve** or **Request Changes** on the PR
+- Voting period: **7 days** (or until threshold is reached)
+- Approval threshold: **>50%** of existing members must approve
+- If approved, maintainers proceed with onboarding
+- If rejected, you will be notified with reasons and may resubmit after 30 days
+
+!!! info "Voting Threshold"
+    The >50% rule applies regardless of federation size. With 2 members, both must approve. With 3 members, at least 2 must approve.
+
+For questions or to discuss your application before submitting, open a ticket at [YunZheng HelpCentre](https://helpdesk.yunzheng.space) or join the [Telegram group](https://t.me/+WLLU-KOXcQFiMTg1).
 
 ### 5. Approval & Onboarding
 
@@ -83,6 +89,8 @@ Once approved:
 | `network.asn` | BGP only | Your AS number |
 | `network.prefixes` | BGP only | IP prefixes you will announce |
 
-## After Approval
+## Need Help?
 
-See the [Setup Guide](setup.md) for step-by-step configuration instructions.
+- **Before applying**: Join the [Telegram group](https://t.me/+WLLU-KOXcQFiMTg1) to discuss your plans
+- **During review**: Open a ticket at [YunZheng HelpCentre](https://helpdesk.yunzheng.space) for technical assistance
+- **After approval**: See the [Setup Guide](setup.md) for step-by-step configuration instructions

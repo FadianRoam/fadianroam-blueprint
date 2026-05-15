@@ -28,6 +28,7 @@ nav:
     - Overview: architecture/overview.md
     - Network Design: architecture/network.md
     - Authentication Flow: architecture/auth.md
+  - Governance: governance.md
   - Joining:
     - Prerequisites: joining/prerequisites.md
     - Submit Application: joining/apply.md
@@ -38,6 +39,7 @@ nav:
     - BGP Integration: reference/bgp.md
     - Federation Relay: reference/relay.md
   - Members: members.md
+  - Roadmap: roadmap.md
 
 markdown_extensions:
   - admonition

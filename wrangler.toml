@@ -1,4 +1,5 @@
 name = "fadianroam-blueprint"
+account_id = "f22d4562bde519ad2d6558140be63e7b"
 compatibility_date = "2026-04-28"
 main = "worker.js"
 

@@ -175,6 +175,35 @@ Access Member (no ASN)
 | Internet path | Own uplinks | Through BGP Site's uplinks |
 | RPKI | Signs ROAs | Not applicable |
 
+## VLAN Architecture
+
+Each FadianRoam Site must isolate FadianRoam traffic from local network traffic using VLANs:
+
+```
+AP
+ ├── SSID: FadianRoam ──→ VLAN 10 ──→ FadianNet (PPPoE /32)
+ └── SSID: Local        ──→ VLAN 20 ──→ Local internet uplink
+```
+
+| VLAN | SSID | Traffic Path | Purpose |
+|------|------|-------------|---------|
+| 10 | `FadianRoam` | AP → FadianNet backbone → Internet | Federation roaming traffic, 802.1X authenticated |
+| 20 | Site-specific | AP → Local gateway → Internet | Site's own local network, not part of FadianRoam |
+
+### Why VLAN Isolation?
+
+- **Accounting**: FadianRoam traffic is measurable and attributable per Site
+- **Fair use enforcement**: Bandwidth limits apply only to VLAN 10
+- **Security**: FadianRoam users cannot access the Site's local network
+- **Commercial clarity**: If a Site monetizes FadianRoam, only VLAN 10 traffic counts toward billing
+
+### AP Requirements
+
+- AP must support **multiple SSIDs with VLAN tagging**
+- The `FadianRoam` SSID must be tagged to a dedicated VLAN
+- The FadianRoam VLAN must route exclusively through the FadianNet data plane (PPPoE tunnel)
+- Local VLANs must **not** carry FadianRoam traffic
+
 ## Internal Addressing
 
 | Network | Subnet | Purpose |
