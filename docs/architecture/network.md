@@ -1,31 +1,57 @@
 # Network Design
 
-FadianRoam operates three network layers plus a virtual peering service (FadianLink).
+FadianRoam's network is split into two independent planes: **FadianRoam** (authentication) and **FadianNet** (data transport). They serve different purposes but work together to deliver seamless roaming Wi-Fi.
 
-## Architecture
+## FadianRoam vs FadianNet
+
+```mermaid
+graph LR
+    subgraph "FadianRoam (Authentication)"
+        AP[Wi-Fi AP] -->|802.1X| R[Site RADIUS]
+        R -->|MGMT VPN| RELAY[Federation Relay]
+        RELAY -->|MGMT VPN| RH[Home RADIUS]
+        RH --> IDP[Home IDP]
+    end
+
+    subgraph "FadianNet (Data Transport)"
+        AP2[Wi-Fi AP] -->|VLAN 10| PPP[PPPoE /32]
+        PPP --> FNET[FadianNet Backbone]
+        FNET --> INET[Internet]
+    end
+```
+
+| | FadianRoam | FadianNet |
+|---|---|---|
+| **Purpose** | 802.1X authentication & roaming | User data transport & internet access |
+| **Transport** | MGMT VPN (WireGuard star) | BGP backbone (VPN mesh + eBGP) |
+| **Traffic** | RADIUS (UDP 1812/1813) | User internet traffic |
+| **Participants** | All Sites | FadianNet Sites (provider) + Access Members (user) |
+| **Nature** | FadianRoam project infrastructure | Public-good backbone maintained by BGP Sites |
+
+## Architecture Overview
 
 ```mermaid
 graph TB
-    subgraph "Layer 1 — MGMT"
-        R_A[Site A] ---|WireGuard| RELAY[Federation Relay]
-        R_B[Site B] ---|WireGuard| RELAY
-        R_C[Access Member] ---|WireGuard| RELAY
+    subgraph "FadianRoam — MGMT VPN"
+        R_A[Site A RADIUS] ---|WireGuard| RELAY[Federation Relay]
+        R_B[Site B RADIUS] ---|WireGuard| RELAY
+        R_C[Access Member RADIUS] ---|WireGuard| RELAY
     end
 
-    subgraph "Layer 2 — FadianNet Backbone"
-        F_A[BGP Site A<br/>AS204921] ---|eBGP| RR1[Regional RR<br/>Asia]
-        F_B[BGP Site B<br/>AS65001] ---|eBGP| RR1
-        F_C[BGP Site C<br/>AS65002] ---|eBGP| RR2[Regional RR<br/>Europe]
+    subgraph "FadianNet — Data Backbone"
+        F_A[FadianNet Site A<br/>AS204921] ---|eBGP| RR1[Regional RR<br/>Asia]
+        F_B[FadianNet Site B<br/>AS65001] ---|eBGP| RR1
+        F_C[FadianNet Site C<br/>AS65002] ---|eBGP| RR2[Regional RR<br/>Europe]
         RR1 ---|eBGP| RR2
     end
 
-    subgraph "Layer 3 — Access"
+    subgraph "Access Members"
         ACC1[Access Member 1] ---|FadianLink + PPPoE| F_A
         ACC2[Access Member 2] ---|FadianLink + PPPoE| F_C
     end
 ```
 
-## Layer 1: MGMT Network
+## FadianRoam Layer: MGMT VPN
 
 Purpose: RADIUS authentication proxy traffic only.
 
@@ -36,21 +62,46 @@ Purpose: RADIUS authentication proxy traffic only.
 | Relay IP | `172.172.10.1` |
 | Member IPs | Assigned on join (e.g., `172.172.10.10`) |
 | Traffic | RADIUS (UDP 1812/1813) only |
-| Required | Yes, for all members (BGP Sites + Access Members) |
+| Required | Yes, for all FadianRoam Sites |
 
 Each member establishes a WireGuard tunnel to the Federation Relay. This tunnel is used exclusively for RADIUS proxy traffic. No mesh — all members connect to the central Relay only.
 
-## Layer 2: FadianNet (BGP Backbone)
+All FadianRoam Sites connect to the MGMT VPN, regardless of whether they also participate in FadianNet.
 
-Purpose: Data backbone carrying user internet traffic between BGP Sites.
+## FadianNet Layer: Data Backbone
 
-### Participants
+Purpose: Carry user internet traffic after 802.1X authentication.
 
-Only **BGP Sites** (members with their own ASN) participate directly in FadianNet BGP. Access Members reach FadianNet indirectly through FadianLink.
+FadianNet is the data plane — the actual network that carries user traffic to the internet. It is maintained collectively by FadianNet Sites as a **public good**.
+
+### FadianNet Roles
+
+Sites participating in FadianNet fall into two roles:
+
+| Role | Description | Requirements |
+|------|-------------|--------------|
+| **FadianNet Site** (Provider + User) | Operates BGP, provides network service to others AND uses FadianNet | Own ASN, BGP daemon, public IP, FadianNet VPN |
+| **Access Member** (User only) | Connects to FadianNet through a FadianNet Site, uses network but does not provide transit | MGMT VPN + FadianLink to a FadianNet Site |
+
+```
+FadianNet Site (Provider + User)
+  ├── Has own ASN, peers with Regional RR
+  ├── Announces shared prefix to upstream (RPKI)
+  ├── Provides transit to Access Members via FadianLink
+  └── Runs PPPoE server for Access Members
+
+Access Member (User only)
+  ├── Connects MGMT VPN (for RADIUS federation)
+  ├── Connects to a FadianNet Site via FadianLink
+  ├── Dials PPPoE to get /32, NATs AP users behind it
+  └── All traffic routes through upstream FadianNet Site
+```
+
+A FadianRoam Site that also provides BGP transit is simultaneously a **FadianRoam Site** (authentication) and a **FadianNet Site** (data). A Site without BGP only joins FadianRoam for authentication and connects to FadianNet as an Access Member for data.
 
 ### Topology
 
-BGP Sites peer with **Regional Route Reflectors** using their own ASN (eBGP):
+FadianNet Sites peer with **Regional Route Reflectors** using their own ASN (eBGP):
 
 ```
           RR Asia ←── eBGP ──→ RR Europe
@@ -58,99 +109,30 @@ BGP Sites peer with **Regional Route Reflectors** using their own ASN (eBGP):
           /    \                /    \
     Site A    Site B      Site C    Site D
    AS204921  AS65001     AS65002   AS65003
+       │                     │
+       └── Access Member 1   └── Access Member 2
+           (via FadianLink)      (via FadianLink)
 ```
 
 - RRs are **not** iBGP route reflectors — each Site uses its own ASN
-- RRs aggregate and redistribute /32 routes across regions
+- RRs aggregate and redistribute routes across regions
 - RRs peer with each other for cross-region reachability
-
-### Shared Prefix
-
-FadianRoam operates a sponsored address space:
-
-| Property | Value |
-|----------|-------|
-| IPv4 | `TBD /24` (sponsored) |
-| IPv6 | `TBD` |
-| RPKI | **Mandatory** — all BGP Sites must carry valid ROAs |
-| Allocation | /32 per active Site (assigned via PPPoE) |
-
-### External Routing (/24)
-
-- Every BGP Site announces the **aggregate /24** to its own upstream providers
-- All announcements must be **RPKI-valid** (ROA signed)
-- External traffic reaches the nearest announcing BGP Site (anycast)
-
-### Internal Routing (/32)
-
-- Within FadianNet, **/32 fine-grained routes** propagate freely
-- No prefix-length filtering — all /32s are accepted between BGP Sites
-- Each /32 represents one active member (BGP Site or Access Member)
-- BGP Sites announce their own /32 directly; they announce Access Members' /32s on their behalf
-
-```
-FadianNet internal eBGP:
-  Site A (AS204921): X.X.X.1/32 (own) + X.X.X.5/32 (Access Member via FadianLink)
-  Site B (AS65001):  X.X.X.2/32 (own) + X.X.X.8/32 (Access Member via FadianLink)
-
-Public internet eBGP:
-  All BGP Sites: X.X.X.0/24 (RPKI signed aggregate)
-```
-
-## Layer 3: Access Layer (PPPoE)
-
-Purpose: Business-layer access control for all members.
-
-### How It Works
-
-Every member (BGP Site or Access Member) obtains network access via PPPoE:
-
-1. Member connects VPN tunnel to a FadianNet node (BGP Site directly, or via FadianLink)
-2. Member dials PPPoE over the VPN link
-3. PPPoE server assigns a **/32 IP** from the shared prefix
-4. Member NATs all AP user devices behind this /32
-5. The /32 is announced into FadianNet
-
-```
-Site ──── VPN tunnel ────→ FadianNet node
-                │
-                └── PPPoE dial-up ──→ Assigned X.X.X.N/32
-                                       │
-                                       └── NAT: AP users → X.X.X.N
-```
-
-### PPPoE Infrastructure
-
-| Property | Value |
-|----------|-------|
-| Protocol | PPPoE over VPN |
-| IP Assignment | /32 from shared prefix |
-| Servers | Decentralized — each regional node runs PPPoE |
-| Credential List | Shared across all PPPoE servers |
-| Purpose | Gate network access, enable accounting |
-
-!!! info "Why PPPoE?"
-    VPN connected ≠ authorized to use FadianNet. PPPoE separates the transport layer (VPN) from the business layer (access rights). This enables dynamic access control, traffic accounting, and Site suspension without modifying VPN or BGP configuration.
 
 ## FadianLink
 
-Purpose: Virtual BGP service bridging BGP Sites and Access Members.
-
-### Overview
-
-FadianLink allows BGP Sites to extend FadianNet connectivity to Access Members who do not have their own ASN. It runs on top of existing FadianNet VPN links.
+FadianLink bridges FadianNet Sites and Access Members, allowing Sites without BGP to use the FadianNet data plane.
 
 ```
 Access Member (no ASN)
     │
-    └── VPN ──→ BGP Site (AS204921)
+    └── VPN ──→ FadianNet Site (AS204921)
                     │
                     ├── PPPoE server assigns /32 to Access Member
                     ├── Announces Access Member's /32 into FadianNet
                     └── Provides default route to Access Member
 ```
 
-### For BGP Sites
+### For FadianNet Sites
 
 - Run a PPPoE server for connected Access Members
 - Announce Access Members' /32 routes into FadianNet on their behalf
@@ -159,20 +141,20 @@ Access Member (no ASN)
 
 ### For Access Members
 
-- Connect VPN to a BGP Site offering FadianLink
+- Connect VPN to a FadianNet Site offering FadianLink
 - Dial PPPoE to get /32, NAT AP users behind it
-- All traffic routes through the upstream BGP Site
+- All traffic routes through the upstream FadianNet Site
 - No ASN, no BGP configuration needed
 
-### FadianLink vs Direct BGP
+### Comparison
 
-| | BGP Site | Access Member (via FadianLink) |
+| | FadianNet Site | Access Member (via FadianLink) |
 |---|---|---|
 | ASN | Own ASN | None |
-| BGP peering | Direct with regional RR | None — BGP Site peers on behalf |
-| /32 announcement | Self | BGP Site announces on behalf |
+| BGP peering | Direct with regional RR | None — FadianNet Site peers on behalf |
+| /32 announcement | Self | FadianNet Site announces on behalf |
 | /24 upstream | Announces to own upstreams | Not applicable |
-| Internet path | Own uplinks | Through BGP Site's uplinks |
+| Internet path | Own uplinks | Through FadianNet Site's uplinks |
 | RPKI | Signs ROAs | Not applicable |
 
 ## VLAN Architecture
@@ -204,13 +186,128 @@ AP
 - The FadianRoam VLAN must route exclusively through the FadianNet data plane (PPPoE tunnel)
 - Local VLANs must **not** carry FadianRoam traffic
 
+## Data Plane Design — Active Discussion
+
+!!! warning "Design Decision in Progress"
+    The FadianNet data plane routing model is currently under evaluation. Two proposals are being considered. Community input is welcome — discuss in the [Telegram group](https://t.me/+WLLU-KOXcQFiMTg1) or open a ticket at [YunZheng HelpCentre](https://helpdesk.yunzheng.space).
+
+### Proposal A: Shared Public Prefix (Anycast Model)
+
+A sponsored **/24 prefix** is announced by all FadianNet Sites, with internal /32 routing for per-site addressing.
+
+```
+External (public internet):
+  All FadianNet Sites announce X.X.X.0/24 via own ASN
+  RPKI ROAs authorize multiple ASes for the same /24
+  → External traffic enters via nearest FadianNet Site (anycast)
+
+Internal (FadianNet eBGP):
+  Site A (AS204921): X.X.X.1/32 + X.X.X.5/32 (Access Member)
+  Site B (AS65001):  X.X.X.2/32 + X.X.X.8/32 (Access Member)
+  → /32 routes propagate freely between all FadianNet Sites
+```
+
+**How it works**:
+
+1. Each FadianNet Site announces the aggregate /24 to its own upstream providers (RPKI-valid)
+2. Each Site/Access Member is assigned a /32 from the shared prefix (via PPPoE)
+3. Internally, /32 fine-grained routes propagate via Regional RR eBGP
+4. External traffic enters via the nearest announcing FadianNet Site (anycast), then routes internally to the correct /32
+5. Users access the internet through the FadianNet backbone — traffic exits at the nearest FadianNet Site
+
+| Property | Value |
+|----------|-------|
+| Public prefix | Sponsored /24 (TBD) |
+| RPKI | Multi-AS ROA — each FadianNet Site's ASN authorized |
+| External routing | Anycast /24, nearest-entry |
+| Internal routing | /32 per Site, eBGP via Regional RRs |
+| IP assignment | /32 from shared prefix, assigned via PPPoE |
+| User traffic path | AP → VLAN 10 → PPPoE /32 → FadianNet → nearest exit → Internet |
+
+**Pros**:
+
+- Unified public address space — all FadianRoam users share one routable /24
+- Anycast entry — external traffic enters at the geographically closest FadianNet Site
+- Clean separation — FadianRoam traffic is identifiable by prefix
+- Access Members don't need their own IP resources
+- Scalable — supports many Sites with /32 allocation
+
+**Cons**:
+
+- Requires a sponsored /24 prefix
+- RPKI multi-AS ROA management adds operational complexity
+- Dependency on the prefix sponsor
+
+---
+
+### Proposal B: Internal Loopback + Home Routing
+
+FadianNet uses an **internal /24** for loopback addressing (similar to OSPF/IGP), and roaming users' traffic is tunneled back to their home Site for internet access.
+
+```
+Internal (FadianNet):
+  Site A loopback: 172.172.11.1
+  Site B loopback: 172.172.11.2
+  Access Member loopback: 172.172.11.5
+  → Internal reachability via eBGP loopback routes
+
+User traffic flow:
+  User@Site_B connects at Site_A AP
+  → Traffic tunneled back to Site_B (home) → Site_B uplink → Internet
+```
+
+**How it works**:
+
+1. FadianNet Sites peer via eBGP with internal loopback addressing (/24)
+2. When a user roams, their traffic is tunneled back to their home Site
+3. The home Site provides internet access via its own uplinks
+4. No shared public prefix needed — each Site uses its own IP resources
+
+| Property | Value |
+|----------|-------|
+| Public prefix | None (each Site uses own) |
+| Internal routing | Loopback /24, eBGP between FadianNet Sites |
+| User traffic path | AP → tunnel back to home Site → home uplink → Internet |
+
+**Pros**:
+
+- No dependency on a sponsored prefix
+- Each Site uses its own IP resources and uplinks
+- Simpler RPKI — no multi-AS ROA coordination
+
+**Cons**:
+
+- **Uneven link cost**: Roaming traffic must traverse back to the home Site, potentially crossing multiple hops. A user in Europe connected at an Asia Site would have their traffic routed all the way back to Europe before reaching the internet.
+- **Forced BGP binding**: Access Members without BGP are dependent on a FadianNet Site for both transit AND home-routing, creating a tight coupling.
+- **Higher latency for roaming users**: Traffic always exits at the home Site, not the nearest exit.
+
+---
+
+### Comparison
+
+| Aspect | Proposal A (Shared Prefix) | Proposal B (Home Routing) |
+|--------|---------------------------|--------------------------|
+| Public IP resources | Sponsored /24 shared | Each Site's own |
+| External traffic entry | Nearest FadianNet Site (anycast) | Home Site only |
+| Roaming latency | Low (nearest exit) | High (tunnel to home) |
+| RPKI complexity | Multi-AS ROA | Per-site ROA |
+| Access Member dependency | PPPoE /32 from backbone | Tunnel back to sponsor |
+| Prefix sponsor required | Yes | No |
+| Scalability | High | Limited by home-routing overhead |
+
+!!! note "Current Leaning"
+    Proposal A (Shared Public Prefix) is the preferred direction. It provides better user experience through anycast routing, cleaner traffic accounting, and lower roaming latency. The main prerequisite is securing a sponsored /24 prefix.
+
+    Discussion is ongoing — join the conversation in the [Telegram group](https://t.me/+WLLU-KOXcQFiMTg1).
+
 ## Internal Addressing
 
 | Network | Subnet | Purpose |
 |---------|--------|---------|
-| MGMT | `172.172.10.0/24` | RADIUS relay tunnels |
+| MGMT | `172.172.10.0/24` | RADIUS relay tunnels (FadianRoam) |
+| FadianNet Loopbacks | `172.172.11.0/24` | Router IDs for FadianNet Sites |
 | FadianNet P2P | `172.172.12.0/24` | VPN point-to-point links |
-| FadianRoam Prefix | `TBD /24` | PPPoE-assigned member IPs |
+| FadianRoam Prefix | `TBD /24` | PPPoE-assigned member IPs (Proposal A) |
 | FadianRoam v6 | `TBD` | IPv6 allocation |
 
 ## Traffic Flow
@@ -218,18 +315,18 @@ AP
 End-to-end flow for a roaming user at an Access Member site:
 
 ```
-1. User connects to AP → 802.1X authentication
+1. User connects to FadianRoam SSID → 802.1X authentication
 2. AP → Site RADIUS → MGMT VPN → Federation Relay → Home RADIUS → IDP
-3. Access-Accept → User gets Wi-Fi
-4. User traffic → AP → NAT (X.X.X.N) → FadianLink VPN → BGP Site → FadianNet → Internet
+3. Access-Accept → User gets Wi-Fi on VLAN 10
+4. User traffic → VLAN 10 → PPPoE /32 → FadianLink VPN → FadianNet Site → Internet
 ```
 
 ## Member Types & Requirements
 
-| Requirement | BGP Site | Access Member |
-|-------------|----------|---------------|
+| Requirement | FadianNet Site (Provider + User) | Access Member (User only) |
+|-------------|----------------------------------|---------------------------|
 | MGMT VPN to Relay | Required | Required |
-| FadianNet VPN | Direct to regional RR | Via FadianLink to BGP Site |
+| FadianNet VPN | Direct to regional RR | Via FadianLink to FadianNet Site |
 | PPPoE dial-up | Required | Required |
 | Own ASN | Required | Not required |
 | eBGP session | Required | Not required |
