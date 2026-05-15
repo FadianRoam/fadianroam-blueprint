@@ -300,6 +300,10 @@ User traffic flow:
 
     讨论仍在进行中——欢迎加入 [Telegram 群组](https://t.me/+WLLU-KOXcQFiMTg1)参与讨论。
 
+<img src="https://img.yunzheng.space/2026/05/tpttw1r0.png" width="500">
+
+<img src="https://img.yunzheng.space/2026/05/4vz3k2n2.png" width="500">
+
 ## 内部寻址
 
 | 网络 | 子网 | 用途 |

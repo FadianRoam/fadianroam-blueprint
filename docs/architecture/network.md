@@ -300,6 +300,10 @@ User traffic flow:
 
     Discussion is ongoing — join the conversation in the [Telegram group](https://t.me/+WLLU-KOXcQFiMTg1).
 
+<img src="https://img.yunzheng.space/2026/05/tpttw1r0.png" width="500">
+
+<img src="https://img.yunzheng.space/2026/05/4vz3k2n2.png" width="500">
+
 ## Internal Addressing
 
 | Network | Subnet | Purpose |
