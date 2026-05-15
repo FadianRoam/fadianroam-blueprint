@@ -24,7 +24,7 @@ Membership is managed through **democratic federation voting**:
 
 - New members submit a PR → existing members vote → **>50% approval** required
 - Each Site autonomously manages its own users and registration policy
-- As the federation grows, a [Governance Council](governance.md#fadianroam-governance-council) (发电组织) will be formed by core members
+- As the federation grows, a [Governance Committee](governance.md#fadianroam-governance-committee) (发电委员会) will be formed by core members
 
 ## Join the Project
 

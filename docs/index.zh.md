@@ -24,7 +24,7 @@ BGP 站点以互助方式互联。FadianRoam 站点在[合理使用政策](gover
 
 - 新成员提交 PR → 现有成员投票 → 需要**超过 50% 批准**
 - 每个站点自主管理自己的用户和注册政策
-- 随着联盟发展，核心成员将组建[治理委员会](governance.zh.md#fadianroam-governance-council)（发电组织）
+- 随着联盟发展，核心成员将组建[发电委员会](governance.zh.md#fadianroam-governance-committee)（FadianRoam Governance Committee）
 
 ## 加入项目
 

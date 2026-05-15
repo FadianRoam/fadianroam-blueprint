@@ -53,7 +53,7 @@ Create a PR with:
 All existing FadianRoam Site representatives vote on your application via GitHub PR review:
 
 - Each member casts **Approve** or **Request Changes** on the PR
-- Voting period: **7 days** (or until threshold is reached)
+- Voting period: **3 days** (or until threshold is reached)
 - Approval threshold: **>50%** of existing members must approve
 - If approved, maintainers proceed with onboarding
 - If rejected, you will be notified with reasons and may resubmit after 30 days

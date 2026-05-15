@@ -27,7 +27,7 @@ FadianRoam development is organized into phases, progressing from basic federati
 - [ ] Automated member onboarding (CI/CD generates Relay config on PR merge)
 - [ ] FadianLink operational (Access Members via BGP Site sponsorship)
 
-**Governance**: Formal voting process. Governance Council formation begins.
+**Governance**: Formal voting process. Governance Committee formation begins.
 
 **Cost model**: Free tier with fair-use limits. Elevated use requests handled via [YunZheng HelpCentre](https://helpdesk.yunzheng.space).
 
@@ -42,6 +42,6 @@ FadianRoam development is organized into phases, progressing from basic federati
 - [ ] Shared /24 prefix with RPKI (sponsored)
 - [ ] Uptime monitoring and SLA for federation infrastructure
 
-**Governance**: Governance Council (发电组织) fully operational. Core members define policies, resolve disputes, manage commercial agreements.
+**Governance**: Governance Committee (发电委员会) fully operational. Core members define policies, resolve disputes, manage commercial agreements.
 
 **Cost model**: Tiered. Free tier for community use, paid plans for commercial or high-volume sites. Revenue funds FadianNet backbone maintenance.

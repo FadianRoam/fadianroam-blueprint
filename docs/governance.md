@@ -2,6 +2,15 @@
 
 FadianRoam is governed by its member sites through a democratic federation model.
 
+## Terminology
+
+| Term | Chinese | Definition |
+|------|---------|------------|
+| **FadianRoam** | 发电漫游 | The roaming authentication federation — handles 802.1X, RADIUS proxy, SSID branding, and user management |
+| **FadianNet** | 发电网络 | The BGP data backbone that provides network transport for FadianRoam |
+| **Site** | 站点 | A complete deployment unit at a single location, consisting of the network endpoint (RADIUS server, gateway/router), local infrastructure (APs, switches, VLANs), and the user devices connecting through it |
+| **Governance Committee** | 发电委员会 | The committee responsible for federation operations, strategic decisions, dispute resolution, and policy |
+
 ## Principles
 
 - **FadianNet is a public good** — BGP Sites collectively maintain the backbone infrastructure on a non-profit, mutual-aid basis
@@ -30,7 +39,7 @@ All existing FadianRoam Site representatives vote on the application:
 | 1 | Applicant submits PR with member YAML |
 | 2 | Existing members review the application |
 | 3 | Each member votes via GitHub PR review: **Approve** or **Request Changes** |
-| 4 | Voting period: 7 days (or until threshold is reached) |
+| 4 | Voting period: 3 days (or until threshold is reached) |
 | 5 | If **>50%** of existing members approve → application is accepted |
 | 6 | Maintainers merge the PR and begin onboarding |
 
@@ -43,14 +52,14 @@ If an application does not reach the approval threshold:
 
 - The applicant is notified with reasons
 - The applicant may revise and resubmit after 30 days
-- Repeated rejections may be escalated to the Governance Council
+- Repeated rejections may be escalated to the Governance Committee
 
-## FadianRoam Governance Council
+## FadianRoam Governance Committee
 
-As the federation grows, core members will form the **FadianRoam Governance Council** (发电组织):
+As the federation grows, core members will form the **FadianRoam Governance Committee** (发电委员会):
 
 - **Composition**: Founding members and long-standing active contributors
-- **Role**: Strategic decisions, dispute resolution, commercial policy, billing rules
+- **Role**: Federation operations, strategic decisions, dispute resolution, commercial policy, billing rules
 - **Formation**: Established once the federation reaches a critical mass of active members
 
 ## FadianNet vs FadianRoam
@@ -74,7 +83,7 @@ The spirit of FadianRoam is **Fadian (发电)** — powering your own use and sh
 
 ### Billing System
 
-Once the Governance Council is established, a federation billing system will be introduced:
+Once the Governance Committee is established, a federation billing system will be introduced:
 
 - The billing system **tracks usage**, it does not directly charge fees
 - The federation defines a **reasonable hobby-use baseline** for each Site (bandwidth, user count, traffic, etc.)
@@ -90,7 +99,7 @@ If a Site's usage exceeds the hobby-use baseline, the following process applies:
 | 1 | The Site receives an over-baseline notification |
 | 2 | Site submits an explanation ticket to [YunZheng HelpCentre](https://helpdesk.yunzheng.space) |
 | 3 | **Explain the reason**: temporary spike or sustained need |
-| 4 | Governance Council (or maintainers in early stage) reviews |
+| 4 | Governance Committee (or maintainers in early stage) reviews |
 | 5 | Approved or adjustment requested based on the situation |
 
 ### Special Scenario Approval
@@ -108,7 +117,7 @@ To apply: submit a ticket to [YunZheng HelpCentre](https://helpdesk.yunzheng.spa
 If a Site needs to use FadianRoam for commercial purposes (sustained high usage, paid services, etc.):
 
 1. Disclose commercial intent in the membership application
-2. Obtain Governance Council approval
+2. Obtain Governance Committee approval
 3. Bear the corresponding network costs
 4. Comply with branding and service-level requirements
 
@@ -133,5 +142,5 @@ Applicant / Member
        ├── Membership application → Voting process (GitHub PR)
        ├── Elevated use request → Council review → Approval / Commercial plan
        ├── Technical support → Maintainer assistance
-       └── Dispute / Escalation → Governance Council
+       └── Dispute / Escalation → Governance Committee
 ```

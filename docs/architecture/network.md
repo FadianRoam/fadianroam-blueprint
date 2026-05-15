@@ -303,7 +303,7 @@ User traffic flow:
 !!! quote "Community Discussion"
     **Jack (AS153376)** raised the question: if an ORG has a large number of users across multiple locations connecting to FadianRoam nodes (e.g., JianyuelabLTD), should the Site be classified as commercial use rather than hobby use?
 
-    **Response**: For commercial scenarios, the Governance Council should establish a usage standard on FadianRoam using a **quota** system. When usage exceeds the hobby-use quota, the additional network costs are shared equally among all BGP Sites at a fixed per-quota rate. Each ORG bears the cost of its own usage beyond the hobby-use baseline — specifically, the incremental cost that BGP Sites incur on its behalf.
+    **Response**: For commercial scenarios, the Governance Committee should establish a usage standard on FadianRoam using a **quota** system. When usage exceeds the hobby-use quota, the additional network costs are shared equally among all BGP Sites at a fixed per-quota rate. Each ORG bears the cost of its own usage beyond the hobby-use baseline — specifically, the incremental cost that BGP Sites incur on its behalf.
 
 ## Internal Addressing
 
