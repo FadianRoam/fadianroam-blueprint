@@ -8,6 +8,7 @@ repo_name: FadianRoam/fadianroam-blueprint
 
 theme:
   name: material
+  custom_dir: overrides
   palette:
     - scheme: default
       primary: blue grey
