@@ -99,11 +99,20 @@ Access Member (User only)
 
 同时提供 BGP 传输服务的 FadianRoam 站点兼具 **FadianRoam 站点**（认证）和 **FadianNet 站点**（数据）双重身份。没有 BGP 的站点仅加入 FadianRoam 进行认证，并作为 Access Member 通过 FadianNet 传输数据。
 
-!!! info "LIR / Enduser 类比"
-    FadianNet 的角色结构类似于 RIPE 的 LIR / Enduser 模型：
+!!! info "类比：类似 RIPE LIR / Enduser"
+    这种结构类似于 RIPE NCC 的 LIR / Enduser 模型 — FadianNet 站点类似于 LIR（运营基础设施、赞助下游成员），而没有 BGP 的站点类似于 Enduser（通过当地 LIR 加入）。这只是描述关系的类比，并非实际命名。
 
-    - **FadianNet Provider** ≈ LIR — 拥有自己的 ASN，运营 Regional RR，是骨干网的建设者和维护者
-    - **Access Member** ≈ Enduser — 通过 Provider 接入，无需 ASN 或 BGP 知识
+### 非 BGP 站点加入
+
+没有 BGP 的站点无法直接加入 FadianNet。要参与 FadianRoam，需要：
+
+1. 找到所在地区**最近的 FadianNet + FadianRoam 站点**（即「赞助者」）
+2. 赞助者同意提供 FadianLink 连接
+3. **赞助者代为提交申请 PR** 到联盟投票
+4. 联盟投票（>50%，3 天）— 赞助者为申请者担保
+5. 通过后，非 BGP 站点通过 FadianLink 连接到赞助者并部署 FadianRoam AP
+
+赞助者的 BGP 站点成为非 BGP 站点的互联网出口 — 所有漫游流量都会路由回赞助者。
 
 ### 拓扑结构
 
@@ -246,46 +255,68 @@ Internal (FadianNet eBGP):
 
 ---
 
-### 方案 B：内部环回 + 归属路由
+### 方案 B：内部环回 + 归属路由（BGP 骨干网）
 
-FadianNet 使用**内部 /24**作为环回地址（类似 OSPF/IGP），漫游用户的流量通过隧道回传至其归属站点进行互联网接入。
+FadianNet 使用**内部 /24**作为环回地址（类似 OSPF/IGP）。所有 FadianNet 站点**必须具备 BGP** — 这是骨干网运行的强制要求。漫游用户的流量通过骨干网路由回归属站点进行互联网接入。
 
 ```
-Internal (FadianNet):
-  Site A loopback: 172.172.11.1
-  Site B loopback: 172.172.11.2
-  Access Member loopback: 172.172.11.5
-  → Internal reachability via eBGP loopback routes
-
-User traffic flow:
-  User@Site_B connects at Site_A AP
-  → Traffic tunneled back to Site_B (home) → Site_B uplink → Internet
+FadianNet 骨干网（eBGP mesh，通过 Regional RR）
+│
+├── FadianNet 站点 A (AS204921) ← loopback 172.172.11.1，自有互联网出口
+│   ├── FadianRoam AP（自有用户 → 在站点 A 出网）
+│   └── 非 BGP 站点 X（FadianRoam AP → 漫游回站点 A 出网）
+│
+├── FadianNet 站点 B (AS65001) ← loopback 172.172.11.2，自有互联网出口
+│   ├── FadianRoam AP（自有用户 → 在站点 B 出网）
+│   └── 非 BGP 站点 Y（FadianRoam AP → 漫游回站点 B 出网）
+│
+└── FadianNet 站点 C (AS65002) ← loopback 172.172.11.3，自有互联网出口
+    └── FadianRoam AP（自有用户 → 在站点 C 出网）
 ```
 
 **工作原理**：
 
-1. FadianNet 站点通过 eBGP 使用内部环回地址（/24）对等
-2. 当用户漫游时，其流量通过隧道回传至归属站点
-3. 归属站点通过自有上行链路提供互联网接入
-4. 无需共享公共前缀——每个站点使用自己的 IP 资源
+1. 所有 FadianNet 站点通过 eBGP 对等（各自使用自有 ASN），组成虚拟 BGP 骨干网
+2. 每个站点拥有来自内部前缀的环回 IP；/32 环回路由通过 eBGP 经 Regional RR 传播
+3. 当用户漫游到访问站点时，其流量通过骨干网路由回**归属站点**（为其提供 FadianRoam 接入的 FadianNet 站点）
+4. 归属站点通过自有上行链路提供互联网接入
+5. 非 BGP 站点通过 FadianLink 连接到赞助的 FadianNet 站点；其用户流量路由回赞助者出口
+
+**漫游场景**：
+
+```
+场景 1：BGP 站点用户漫游
+  用户注册在站点 A → 在站点 C 的 AP 连接
+  → 通过 MGMT VPN 认证（FadianRoam）
+  → 数据：站点 C → FadianNet 骨干网 → 站点 A（归属）→ 互联网
+
+场景 2：非 BGP 站点用户漫游
+  用户注册在非 BGP 站点 X（赞助者：站点 A）→ 在站点 B 的 AP 连接
+  → 通过 MGMT VPN 认证（FadianRoam）
+  → 数据：站点 B → FadianNet 骨干网 → 站点 A（赞助者）→ 互联网
+```
 
 | 属性 | 值 |
 |----------|-------|
 | 公共前缀 | 无（每个站点使用自有） |
 | 内部路由 | 环回 /24，FadianNet 站点间 eBGP |
-| 用户流量路径 | AP → 隧道回传至归属站点 → 归属站点上行链路 → 互联网 |
+| BGP 要求 | **强制**，所有 FadianNet 站点必须具备 |
+| 用户流量路径 | AP → FadianNet 骨干网 → 归属站点 → 归属站点上行链路 → 互联网 |
+| 非 BGP 站点路径 | AP → FadianNet 骨干网 → 赞助站点 → 赞助站点上行链路 → 互联网 |
 
 **优点**：
 
-- 不依赖赞助前缀
-- 每个站点使用自有 IP 资源和上行链路
+- 不依赖赞助前缀——每个站点使用自有 IP 资源
 - RPKI 更简单——无需 multi-AS ROA 协调
+- 强制 BGP 确保骨干网质量——每个参与者都贡献路由
+- 非 BGP 站点有清晰的赞助模型
+- 流量统计清晰——每个站点的出口流量可计量
 
 **缺点**：
 
-- **链路成本不均**：漫游流量必须回传至归属站点，可能穿越多个跳。在亚洲站点连接的欧洲用户，其流量需要一路回传至欧洲后才能访问互联网。
-- **强制 BGP 绑定**：没有 BGP 的 Access Member 在传输和归属路由上都依赖 FadianNet 站点，形成紧密耦合。
-- **漫游用户延迟更高**：流量始终从归属站点出口，而非最近出口。
+- **漫游延迟较高**：流量始终从归属站点出口，而非最近出口。在欧洲站点连接的亚洲用户，流量需路由回亚洲。
+- **跨区域带宽成本**：长距离漫游消耗区域间骨干网带宽。
+- **赞助者依赖**：非 BGP 站点完全依赖赞助者的互联网出口。
 
 ---
 
@@ -302,9 +333,9 @@ User traffic flow:
 | 可扩展性 | 高 | 受限于归属路由开销 |
 
 !!! note "当前倾向"
-    方案 A（共享公共前缀）是首选方向。它通过 anycast 路由提供更好的用户体验、更清晰的流量统计以及更低的漫游延迟。主要前提是获得赞助的 /24 前缀。
+    方案 B（内部环回 + 归属路由）是当前首选方向。它强制所有骨干网参与者具备 BGP，为非 BGP 站点提供清晰的赞助模型，且不依赖赞助前缀。代价是漫游延迟较高，但对于社区网络而言可以接受。
 
-    讨论仍在进行中——欢迎加入 [Telegram 群组](https://t.me/+WLLU-KOXcQFiMTg1)参与讨论。
+    两个方案仍在考虑中——欢迎加入 [Telegram 群组](https://t.me/+WLLU-KOXcQFiMTg1)参与讨论。
 
 !!! quote "社区讨论"
     **Jack（AS153376）** 提出了一个问题：如果一个 ORG 的用户特别多，在各地都有大量用户连接到 FadianRoam 节点（例如 JianyuelabLTD），那这个站点是否应该被视为商业使用？

@@ -99,11 +99,20 @@ Access Member (User only)
 
 A FadianRoam Site that also provides BGP transit is simultaneously a **FadianRoam Site** (authentication) and a **FadianNet Site** (data). A Site without BGP only joins FadianRoam for authentication and connects to FadianNet as an Access Member for data.
 
-!!! info "LIR / Enduser Analogy"
-    FadianNet's role structure is analogous to the RIPE LIR / Enduser model:
+!!! info "Analogy: Similar to RIPE LIR / Enduser"
+    This structure is analogous to the RIPE NCC's LIR / Enduser model — a FadianNet Site acts like an LIR (operates infrastructure, sponsors downstream members), while a non-BGP Site seeking FadianRoam access acts like an Enduser (joins through a local LIR). The analogy describes the relationship, not the actual naming.
 
-    - **FadianNet Provider** ≈ LIR — has its own ASN, operates Regional RR, builds and maintains the backbone
-    - **Access Member** ≈ Enduser — joins through a Provider, no ASN or BGP knowledge required
+### Non-BGP Site Admission
+
+A Site without BGP cannot join FadianNet directly. To participate in FadianRoam, it must:
+
+1. Find the **nearest FadianNet + FadianRoam Site** in its region (the "sponsor")
+2. The sponsor agrees to provide FadianLink connectivity
+3. The **sponsor submits the application PR** on behalf of the non-BGP Site to the federation
+4. Federation votes (>50%, 3 days) — the sponsor vouches for the applicant
+5. On approval, the non-BGP Site connects via FadianLink to the sponsor and deploys FadianRoam APs
+
+The sponsor's BGP site becomes the non-BGP site's internet exit point — all roaming traffic from the non-BGP site routes back to the sponsor.
 
 ### Topology
 
@@ -246,46 +255,68 @@ Internal (FadianNet eBGP):
 
 ---
 
-### Proposal B: Internal Loopback + Home Routing
+### Proposal B: Internal Loopback + Home Routing (BGP Backbone)
 
-FadianNet uses an **internal /24** for loopback addressing (similar to OSPF/IGP), and roaming users' traffic is tunneled back to their home Site for internet access.
+FadianNet uses an **internal /24** for loopback addressing (similar to OSPF/IGP). All FadianNet Sites **must have BGP** — this is mandatory for the backbone to function. Roaming users' traffic is tunneled back to their home Site for internet access.
 
 ```
-Internal (FadianNet):
-  Site A loopback: 172.172.11.1
-  Site B loopback: 172.172.11.2
-  Access Member loopback: 172.172.11.5
-  → Internal reachability via eBGP loopback routes
-
-User traffic flow:
-  User@Site_B connects at Site_A AP
-  → Traffic tunneled back to Site_B (home) → Site_B uplink → Internet
+FadianNet Backbone (eBGP mesh via Regional RRs)
+│
+├── FadianNet Site A (AS204921) ← loopback 172.172.11.1, own internet exit
+│   ├── FadianRoam AP (own users → exit at Site A)
+│   └── Non-BGP Site X (FadianRoam AP → roams back to Site A for exit)
+│
+├── FadianNet Site B (AS65001) ← loopback 172.172.11.2, own internet exit
+│   ├── FadianRoam AP (own users → exit at Site B)
+│   └── Non-BGP Site Y (FadianRoam AP → roams back to Site B for exit)
+│
+└── FadianNet Site C (AS65002) ← loopback 172.172.11.3, own internet exit
+    └── FadianRoam AP (own users → exit at Site C)
 ```
 
 **How it works**:
 
-1. FadianNet Sites peer via eBGP with internal loopback addressing (/24)
-2. When a user roams, their traffic is tunneled back to their home Site
-3. The home Site provides internet access via its own uplinks
-4. No shared public prefix needed — each Site uses its own IP resources
+1. All FadianNet Sites peer via eBGP (each with own ASN), forming a virtual BGP backbone
+2. Each Site has a loopback IP from the internal prefix; /32 loopback routes propagate via eBGP through Regional RRs
+3. When a user roams to a visited Site, their traffic is routed back through the backbone to their **home Site** (the FadianNet Site that provides their FadianRoam access)
+4. The home Site provides internet access via its own uplinks
+5. Non-BGP Sites connect through a sponsoring FadianNet Site via FadianLink; their users' traffic routes back to the sponsor's exit
+
+**Roaming scenarios**:
+
+```
+Scenario 1: BGP Site user roaming
+  User registered at Site A → connects at Site C AP
+  → Auth via MGMT VPN (FadianRoam)
+  → Data: Site C → FadianNet backbone → Site A (home) → Internet
+
+Scenario 2: Non-BGP Site user roaming
+  User registered at Non-BGP Site X (sponsor: Site A) → connects at Site B AP
+  → Auth via MGMT VPN (FadianRoam)
+  → Data: Site B → FadianNet backbone → Site A (sponsor) → Internet
+```
 
 | Property | Value |
 |----------|-------|
 | Public prefix | None (each Site uses own) |
 | Internal routing | Loopback /24, eBGP between FadianNet Sites |
-| User traffic path | AP → tunnel back to home Site → home uplink → Internet |
+| BGP requirement | **Mandatory** for all FadianNet Sites |
+| User traffic path | AP → FadianNet backbone → home Site → home uplink → Internet |
+| Non-BGP Site path | AP → FadianNet backbone → sponsor Site → sponsor uplink → Internet |
 
 **Pros**:
 
-- No dependency on a sponsored prefix
-- Each Site uses its own IP resources and uplinks
+- No dependency on a sponsored prefix — each Site uses its own IP resources
 - Simpler RPKI — no multi-AS ROA coordination
+- Mandatory BGP ensures backbone quality — every participant contributes routing
+- Clear sponsorship model for non-BGP Sites
+- Traffic accounting is straightforward — each Site's exit traffic is measurable
 
 **Cons**:
 
-- **Uneven link cost**: Roaming traffic must traverse back to the home Site, potentially crossing multiple hops. A user in Europe connected at an Asia Site would have their traffic routed all the way back to Europe before reaching the internet.
-- **Forced BGP binding**: Access Members without BGP are dependent on a FadianNet Site for both transit AND home-routing, creating a tight coupling.
-- **Higher latency for roaming users**: Traffic always exits at the home Site, not the nearest exit.
+- **Higher roaming latency**: Traffic always exits at the home Site, not the nearest exit. A user in Asia connected at a Europe Site would have traffic routed back to Asia.
+- **Cross-region bandwidth cost**: Long-distance roaming consumes backbone bandwidth between regions.
+- **Sponsor dependency**: Non-BGP Sites are fully dependent on their sponsor for internet exit.
 
 ---
 
@@ -302,9 +333,9 @@ User traffic flow:
 | Scalability | High | Limited by home-routing overhead |
 
 !!! note "Current Leaning"
-    Proposal A (Shared Public Prefix) is the preferred direction. It provides better user experience through anycast routing, cleaner traffic accounting, and lower roaming latency. The main prerequisite is securing a sponsored /24 prefix.
+    Proposal B (Internal Loopback + Home Routing) is the current preferred direction. It enforces mandatory BGP for all backbone participants, provides a clear sponsorship model for non-BGP Sites, and avoids dependency on a sponsored prefix. The tradeoff is higher roaming latency, which is acceptable for a community network.
 
-    Discussion is ongoing — join the conversation in the [Telegram group](https://t.me/+WLLU-KOXcQFiMTg1).
+    Both proposals remain under consideration — join the discussion in the [Telegram group](https://t.me/+WLLU-KOXcQFiMTg1).
 
 !!! quote "Community Discussion"
     **Jack (AS153376)** raised the question: if an ORG has a large number of users across multiple locations connecting to FadianRoam nodes (e.g., JianyuelabLTD), should the Site be classified as commercial use rather than hobby use?
