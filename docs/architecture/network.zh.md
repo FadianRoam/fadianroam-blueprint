@@ -99,6 +99,12 @@ Access Member (User only)
 
 同时提供 BGP 传输服务的 FadianRoam 站点兼具 **FadianRoam 站点**（认证）和 **FadianNet 站点**（数据）双重身份。没有 BGP 的站点仅加入 FadianRoam 进行认证，并作为 Access Member 通过 FadianNet 传输数据。
 
+!!! info "LIR / Enduser 类比"
+    FadianNet 的角色结构类似于 RIPE 的 LIR / Enduser 模型：
+
+    - **FadianNet Provider** ≈ LIR — 拥有自己的 ASN，运营 Regional RR，是骨干网的建设者和维护者
+    - **Access Member** ≈ Enduser — 通过 Provider 接入，无需 ASN 或 BGP 知识
+
 ### 拓扑结构
 
 FadianNet 站点使用自有 ASN 通过 eBGP 与 **Regional Route Reflector** 对等：
@@ -314,6 +320,20 @@ User traffic flow:
 | FadianNet 点对点 | `172.172.12.0/24` | VPN 点对点链路 |
 | FadianRoam 前缀 | `TBD /24` | PPPoE 分配的成员 IP（方案 A） |
 | FadianRoam v6 | `TBD` | IPv6 分配 |
+
+## IPv6-Only 站点：464XLAT
+
+没有公网 IPv4 的站点可以通过 **464XLAT**（RFC 6877）参与 FadianNet。这允许 IPv6-only 站点为用户设备提供完整的 IPv4 连接：
+
+```
+用户设备（IPv4 应用）
+    → CLAT（客户端侧转换，在 AP/网关上）
+    → IPv6-only FadianNet 传输
+    → PLAT（提供者侧转换，在 FadianNet 站点上）
+    → IPv4 互联网
+```
+
+这降低了仅有 IPv6 连接的 Access Member 的准入门槛——无需公网 IPv4 分配。
 
 ## 流量流向
 

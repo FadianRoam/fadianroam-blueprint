@@ -99,6 +99,12 @@ Access Member (User only)
 
 A FadianRoam Site that also provides BGP transit is simultaneously a **FadianRoam Site** (authentication) and a **FadianNet Site** (data). A Site without BGP only joins FadianRoam for authentication and connects to FadianNet as an Access Member for data.
 
+!!! info "LIR / Enduser Analogy"
+    FadianNet's role structure is analogous to the RIPE LIR / Enduser model:
+
+    - **FadianNet Provider** ≈ LIR — has its own ASN, operates Regional RR, builds and maintains the backbone
+    - **Access Member** ≈ Enduser — joins through a Provider, no ASN or BGP knowledge required
+
 ### Topology
 
 FadianNet Sites peer with **Regional Route Reflectors** using their own ASN (eBGP):
@@ -314,6 +320,20 @@ User traffic flow:
 | FadianNet P2P | `172.172.12.0/24` | VPN point-to-point links |
 | FadianRoam Prefix | `TBD /24` | PPPoE-assigned member IPs (Proposal A) |
 | FadianRoam v6 | `TBD` | IPv6 allocation |
+
+## IPv6-Only Sites: 464XLAT
+
+Sites without public IPv4 can participate in FadianNet using **464XLAT** (RFC 6877). This allows an IPv6-only site to provide full IPv4 connectivity to user devices:
+
+```
+User device (IPv4 app)
+    → CLAT (client-side translation, on AP/gateway)
+    → IPv6-only FadianNet transport
+    → PLAT (provider-side translation, at FadianNet Site)
+    → IPv4 internet
+```
+
+This lowers the barrier for Access Members that only have IPv6 connectivity — no public IPv4 allocation required.
 
 ## Traffic Flow
 
