@@ -418,7 +418,7 @@ graph TB
 
 ## IPv6-Only 站点：464XLAT
 
-没有公网 IPv4 的站点可以通过 **464XLAT**（RFC 6877）参与 FadianNet。这允许 IPv6-only 站点为用户设备提供完整的 IPv4 连接：
+没有公网 IPv4 的站点可以通过 **[464XLAT](https://soha.moe/post/ipv6-only-preferred-at-home.html)**（RFC 6877）参与 FadianNet。这允许 IPv6-only 站点为用户设备提供完整的 IPv4 连接：
 
 ```
 用户设备（IPv4 应用）

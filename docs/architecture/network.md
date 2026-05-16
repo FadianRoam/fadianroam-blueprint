@@ -418,7 +418,7 @@ graph TB
 
 ## IPv6-Only Sites: 464XLAT
 
-Sites without public IPv4 can participate in FadianNet using **464XLAT** (RFC 6877). This allows an IPv6-only site to provide full IPv4 connectivity to user devices:
+Sites without public IPv4 can participate in FadianNet using **[464XLAT](https://soha.moe/post/ipv6-only-preferred-at-home.html)** (RFC 6877). This allows an IPv6-only site to provide full IPv4 connectivity to user devices:
 
 ```
 User device (IPv4 app)
