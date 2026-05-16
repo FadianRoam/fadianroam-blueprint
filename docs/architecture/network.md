@@ -296,6 +296,70 @@ Scenario 2: Non-BGP Site user roaming
   → Data: Site B → FadianNet backbone → Site A (sponsor) → Internet
 ```
 
+#### Real-World Example
+
+Consider a scenario where all sites use overseas transit (e.g., in regions where domestic IP Transit is unavailable):
+
+```
+Site A (Beijing, own AS)
+  └── VPN → Japan Transit → Internet
+  └── FadianRoam AP at home in Beijing
+
+Site B (Shanghai, own AS)
+  └── VPN → Korea Transit → Internet
+  └── FadianRoam AP at home in Shanghai
+
+Site C (Beijing, no BGP)
+  └── Sponsored by Site A
+  └── VPN → Site A Beijing PoP → A's FadianNet → Internet
+  └── FadianRoam AP at home in Beijing
+```
+
+```mermaid
+graph TB
+    subgraph "FadianNet Backbone (eBGP)"
+        A["Site A (Beijing)<br/>AS204921"] ---|eBGP| RR[Regional RR]
+        B["Site B (Shanghai)<br/>AS65001"] ---|eBGP| RR
+    end
+
+    subgraph "Transit (overseas)"
+        A -->|VPN| JP[Japan Transit]
+        B -->|VPN| KR[Korea Transit]
+        JP --> INET[Internet]
+        KR --> INET
+    end
+
+    subgraph "Non-BGP"
+        C["Site C (Beijing)<br/>no ASN"] -->|FadianLink VPN| A
+    end
+```
+
+**Normal operation (no roaming)**:
+
+- Site A users connect at A's AP → traffic exits via A's Japan transit
+- Site B users connect at B's AP → traffic exits via B's Korea transit
+- Site C users connect at C's AP → traffic routes through A's FadianNet → exits via A's Japan transit
+- Within FadianNet, A and B may exchange routes via eBGP — A can choose to route some traffic through B's Korea transit (or vice versa) based on BGP path selection
+
+**User from A roams to B's house (Shanghai)**:
+
+1. A's user connects to B's FadianRoam AP
+2. Auth: B's RADIUS → MGMT VPN → Federation Relay → A's RADIUS → A's IDP → Access-Accept
+3. Data: B's AP → FadianNet backbone → roams back to **A's Beijing site** → A's Japan transit → Internet
+4. Some routes may still be selected through B's Korea exit based on BGP path selection — this detour is acceptable and can be fine-tuned with route policy if needed
+
+**User from C roams to B's house (Shanghai)**:
+
+1. C's user connects to B's FadianRoam AP
+2. Auth: B's RADIUS → MGMT VPN → Federation Relay → **C's RADIUS** → C's IDP → Access-Accept (C has its own MGMT VPN to Federation Relay)
+3. Data: B's AP → FadianNet backbone → roams back to **A's Beijing site** (C's sponsor) → A's Japan transit → Internet
+
+!!! info "Authentication vs Data Path"
+    Authentication always routes to the **user's own FadianRoam Site** (each Site has its own MGMT VPN to the Federation Relay). Data always routes to the user's **home FadianNet Site** (the BGP site providing their internet exit). For non-BGP Sites, these are different: auth goes to C, data goes to A (C's sponsor).
+
+!!! note "Routing Detours"
+    In default FadianNet routing, some paths may be suboptimal — e.g., traffic from B roaming back to A might still be selected to exit through B's Korea transit based on BGP best path. This is normal BGP behavior and acceptable for a community network. Sites can coordinate to adjust route policy for specific cases, but some detour is inherent to the home-routing model.
+
 | Property | Value |
 |----------|-------|
 | Public prefix | None (each Site uses own) |

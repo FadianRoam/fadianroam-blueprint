@@ -296,6 +296,70 @@ FadianNet 骨干网（eBGP mesh，通过 Regional RR）
   → 数据：站点 B → FadianNet 骨干网 → 站点 A（赞助者）→ 互联网
 ```
 
+#### 真实场景示例
+
+考虑一个所有站点都使用境外 Transit 的场景（例如中国大陆没有 IP Transit 服务的情况）：
+
+```
+站点 A（北京，自有 AS）
+  └── VPN → 日本 Transit → 互联网
+  └── FadianRoam AP 部署在北京家中
+
+站点 B（上海，自有 AS）
+  └── VPN → 韩国 Transit → 互联网
+  └── FadianRoam AP 部署在上海家中
+
+站点 C（北京，无 BGP）
+  └── 由站点 A 赞助
+  └── VPN → 站点 A 北京 PoP → A 的 FadianNet → 互联网
+  └── FadianRoam AP 部署在北京家中
+```
+
+```mermaid
+graph TB
+    subgraph "FadianNet 骨干网（eBGP）"
+        A["站点 A（北京）<br/>AS204921"] ---|eBGP| RR[Regional RR]
+        B["站点 B（上海）<br/>AS65001"] ---|eBGP| RR
+    end
+
+    subgraph "Transit（境外）"
+        A -->|VPN| JP[日本 Transit]
+        B -->|VPN| KR[韩国 Transit]
+        JP --> INET[互联网]
+        KR --> INET
+    end
+
+    subgraph "非 BGP"
+        C["站点 C（北京）<br/>无 ASN"] -->|FadianLink VPN| A
+    end
+```
+
+**正常使用（无漫游）**：
+
+- 站点 A 的用户在 A 的 AP 连接 → 流量通过 A 的日本 Transit 出网
+- 站点 B 的用户在 B 的 AP 连接 → 流量通过 B 的韩国 Transit 出网
+- 站点 C 的用户在 C 的 AP 连接 → 流量通过 A 的 FadianNet → 经 A 的日本 Transit 出网
+- 在 FadianNet 内部，A 和 B 通过 eBGP 交换路由 — A 可以根据 BGP 路径选择，将部分流量通过 B 的韩国 Transit 出网（反之亦然）
+
+**A 的用户漫游到 B 家（上海）**：
+
+1. A 的用户连接 B 的 FadianRoam AP
+2. 认证：B 的 RADIUS → MGMT VPN → Federation Relay → A 的 RADIUS → A 的 IDP → Access-Accept
+3. 数据：B 的 AP → FadianNet 骨干网 → 漫游回 **A 的北京站点** → A 的日本 Transit → 互联网
+4. 部分路由可能仍然被 BGP 选择走 B 的韩国出口 — 这种绕路是可以接受的，必要时可以通过路由策略调整
+
+**C 的用户漫游到 B 家（上海）**：
+
+1. C 的用户连接 B 的 FadianRoam AP
+2. 认证：B 的 RADIUS → MGMT VPN → Federation Relay → **C 的 RADIUS** → C 的 IDP → Access-Accept（C 有自己的 MGMT VPN 到 Federation Relay）
+3. 数据：B 的 AP → FadianNet 骨干网 → 漫游回 **A 的北京站点**（C 的赞助者）→ A 的日本 Transit → 互联网
+
+!!! info "认证路径 vs 数据路径"
+    认证始终路由到**用户自身的 FadianRoam 站点**（每个站点都有独立的 MGMT VPN 到 Federation Relay）。数据始终路由到用户的**归属 FadianNet 站点**（提供互联网出口的 BGP 站点）。对于非 BGP 站点，两者是不同的：认证走 C，数据走 A（C 的赞助者）。
+
+!!! note "路由绕路"
+    在默认 FadianNet 路由下，部分路径可能不是最优的 — 例如从 B 漫游回 A 的流量可能仍然被 BGP 最佳路径选择走 B 的韩国出口。这是正常的 BGP 行为，对社区网络而言可以接受。各站点可以协调调整路由策略，但归属路由模型下一定程度的绕路是不可避免的。
+
 | 属性 | 值 |
 |----------|-------|
 | 公共前缀 | 无（每个站点使用自有） |
